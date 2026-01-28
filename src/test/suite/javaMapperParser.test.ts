@@ -115,6 +115,44 @@ public interface UserMapper {
       // メソッド宣言は5行目（0-based で4）
       assert.strictEqual(methods[0].line, 4);
     });
+
+    test("@Param アノテーション付き引数のメソッドを抽出", () => {
+      const content = `package com.example.mapper;
+
+public interface UserMapper {
+    Optional<User> findByEmail(@Param("email") String email);
+    Optional<User> findById(@Param("id") Long id);
+    void deleteById(@Param("id") Long id);
+}`;
+      const methods = extractMethods(content);
+      assert.strictEqual(methods.length, 3);
+      assert.deepStrictEqual(
+        methods.map((m) => m.name),
+        ["findByEmail", "findById", "deleteById"]
+      );
+    });
+
+    test("複数の@Param引数を持つメソッドを抽出", () => {
+      const content = `package com.example.mapper;
+
+public interface UserMapper {
+    void updateUser(@Param("id") Long id, @Param("name") String name);
+}`;
+      const methods = extractMethods(content);
+      assert.strictEqual(methods.length, 1);
+      assert.strictEqual(methods[0].name, "updateUser");
+    });
+
+    test("@Paramとthrows句を含むメソッドを抽出", () => {
+      const content = `package com.example.mapper;
+
+public interface UserMapper {
+    User findById(@Param("id") Long id) throws SQLException;
+}`;
+      const methods = extractMethods(content);
+      assert.strictEqual(methods.length, 1);
+      assert.strictEqual(methods[0].name, "findById");
+    });
   });
 
   suite("isMapperInterface", () => {

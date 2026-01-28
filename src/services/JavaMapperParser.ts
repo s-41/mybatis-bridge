@@ -16,6 +16,27 @@ const PACKAGE_PATTERN = /^\s*package\s+([\w.]+)\s*;/m;
 const INTERFACE_PATTERN = /^\s*(?:public\s+)?interface\s+(\w+)/m;
 
 /**
+ * 開き括弧の位置から対応する閉じ括弧の位置を返す
+ * @param line 検索対象の行
+ * @param openIndex 開き括弧の位置
+ * @returns 閉じ括弧の位置、見つからない場合は-1
+ */
+function findMatchingParen(line: string, openIndex: number): number {
+  let depth = 0;
+  for (let i = openIndex; i < line.length; i++) {
+    if (line[i] === "(") {
+      depth++;
+    } else if (line[i] === ")") {
+      depth--;
+      if (depth === 0) {
+        return i;
+      }
+    }
+  }
+  return -1;
+}
+
+/**
  * 予約語セット（モジュールレベルで定数として定義）
  */
 const RESERVED_WORDS = new Set([
@@ -101,6 +122,7 @@ function extractPackageAndInterface(content: string): {
 
 /**
  * Javaコンテンツからメソッド一覧を抽出
+ * @Paramアノテーションなどネストした括弧を含む引数にも対応
  */
 export function extractMethods(content: string): MethodLocation[] {
   const methods: MethodLocation[] = [];
@@ -110,27 +132,39 @@ export function extractMethods(content: string): MethodLocation[] {
   for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
     const line = lines[lineIndex];
 
-    // メソッド名のパターンをチェック
+    // Step 1: 戻り値型 + メソッド名 + 開き括弧を検出
     // インターフェースのメソッド定義: 戻り値型 メソッド名(引数);
     // 戻り値型は List<User> や Map<String, Object> などジェネリクスを含む可能性がある
-    const methodMatch = line.match(
-      /(?:[\w<>,\s]+)\s+(\w+)\s*\([^)]*\)\s*(?:throws\s+[\w,\s]+)?\s*[;{]/
-    );
-
-    if (methodMatch) {
-      const methodName = methodMatch[1];
-      // メソッド名の位置を計算
-      const column = line.indexOf(methodName);
-
-      // 予約語やアノテーションを除外
-      if (!isReservedWord(methodName)) {
-        methods.push({
-          name: methodName,
-          line: lineIndex,
-          column: column >= 0 ? column : 0,
-        });
-      }
+    const signatureMatch = line.match(/(?:[\w<>,\s]+)\s+(\w+)\s*\(/);
+    if (!signatureMatch) {
+      continue;
     }
+
+    const methodName = signatureMatch[1];
+    if (isReservedWord(methodName)) {
+      continue;
+    }
+
+    // Step 2: 括弧のバランスを追跡して閉じ括弧を見つける
+    // @Param("email") のようなネストした括弧に対応
+    const openParenIndex = line.indexOf("(", signatureMatch.index!);
+    const closeParenIndex = findMatchingParen(line, openParenIndex);
+    if (closeParenIndex === -1) {
+      continue;
+    }
+
+    // Step 3: 閉じ括弧の後に ; または { があるか確認（throws句も許容）
+    const afterParen = line.substring(closeParenIndex + 1).trim();
+    if (!/^(?:throws\s+[\w,\s]+)?\s*[;{]/.test(afterParen)) {
+      continue;
+    }
+
+    const column = line.indexOf(methodName);
+    methods.push({
+      name: methodName,
+      line: lineIndex,
+      column: column >= 0 ? column : 0,
+    });
   }
 
   return methods;
