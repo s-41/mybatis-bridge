@@ -1,0 +1,7 @@
+{
+  "displayName": "MyBatis Bridge",
+  "description": "VS Code extension for MyBatis",
+  "configuration.title": "MyBatis Bridge",
+  "configuration.javaMapperPatterns.description": "Glob patterns to search for Java Mapper interfaces",
+  "configuration.xmlMapperPatterns.description": "Glob patterns to search for MyBatis XML files"
+}

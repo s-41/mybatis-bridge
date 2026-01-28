@@ -10,7 +10,7 @@ import { MapperIndexService } from "./services";
  * @param context - 拡張機能コンテキスト
  */
 export function activate(context: vscode.ExtensionContext): void {
-  console.log('拡張機能 "mybatis-bridge" がアクティブ化されました');
+  console.log(vscode.l10n.t('Extension "mybatis-bridge" has been activated'));
 
   // Java → XML ジャンプのDefinitionProviderを登録
   const javaToXmlProvider = vscode.languages.registerDefinitionProvider(
@@ -26,7 +26,7 @@ export function activate(context: vscode.ExtensionContext): void {
   );
   context.subscriptions.push(xmlToJavaProvider);
 
-  console.log("[MyBatis Bridge] DefinitionProviderを登録しました");
+  console.log(vscode.l10n.t("[MyBatis Bridge] DefinitionProvider registered"));
 }
 
 /**
@@ -35,5 +35,5 @@ export function activate(context: vscode.ExtensionContext): void {
 export function deactivate(): void {
   // MapperIndexServiceのリソースを解放
   MapperIndexService.resetInstance();
-  console.log("[MyBatis Bridge] リソースを解放しました");
+  console.log(vscode.l10n.t("[MyBatis Bridge] Resources released"));
 }

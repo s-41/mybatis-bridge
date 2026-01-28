@@ -1,7 +1,7 @@
 {
   "name": "mybatis-bridge",
-  "displayName": "MyBatis Bridge",
-  "description": "VS Code extension for MyBatis",
+  "displayName": "%displayName%",
+  "description": "%description%",
   "version": "0.0.1",
   "publisher": "your-publisher-name",
   "license": "MIT",
@@ -19,9 +19,10 @@
     "onLanguage:xml"
   ],
   "main": "./dist/extension.js",
+  "l10n": "./l10n",
   "contributes": {
     "configuration": {
-      "title": "MyBatis Bridge",
+      "title": "%configuration.title%",
       "properties": {
         "mybatis-bridge.javaMapperPatterns": {
           "type": "array",
@@ -33,7 +34,7 @@
             "**/*Dao.java",
             "**/*Repository.java"
           ],
-          "description": "JavaのMapperインターフェースを検索するためのglobパターン"
+          "description": "%configuration.javaMapperPatterns.description%"
         },
         "mybatis-bridge.xmlMapperPatterns": {
           "type": "array",
@@ -44,7 +45,7 @@
             "**/resources/**/*.xml",
             "**/*Mapper.xml"
           ],
-          "description": "MyBatis XMLファイルを検索するためのglobパターン"
+          "description": "%configuration.xmlMapperPatterns.description%"
         }
       }
     }

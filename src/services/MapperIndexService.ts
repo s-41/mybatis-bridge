@@ -104,7 +104,7 @@ export class MapperIndexService {
    */
   private async initialize(): Promise<void> {
     this.state = "initializing";
-    console.log("[MyBatis Bridge] インデックスの初期化を開始...");
+    console.log(vscode.l10n.t("[MyBatis Bridge] Starting index initialization..."));
 
     try {
       // XMLファイルをスキャン
@@ -118,12 +118,16 @@ export class MapperIndexService {
 
       this.state = "ready";
       console.log(
-        `[MyBatis Bridge] インデックス初期化完了: XML ${this.xmlMappersByNamespace.size}件, Java ${this.javaMappersByFqn.size}件`
+        vscode.l10n.t(
+          "[MyBatis Bridge] Index initialization complete: XML {0} files, Java {1} files",
+          this.xmlMappersByNamespace.size,
+          this.javaMappersByFqn.size
+        )
       );
     } catch (error) {
       this.state = "uninitialized";
       this.initPromise = null;
-      console.error("[MyBatis Bridge] インデックス初期化エラー:", error);
+      console.error(vscode.l10n.t("[MyBatis Bridge] Index initialization error:"), error);
       throw error;
     }
   }
@@ -199,7 +203,7 @@ export class MapperIndexService {
         this.xmlMappersByUri.set(uri, mapperInfo);
       }
     } catch (error) {
-      console.warn(`[MyBatis Bridge] XMLファイルのパースエラー: ${uri}`, error);
+      console.warn(vscode.l10n.t("[MyBatis Bridge] XML file parse error: {0}", uri), error);
     }
   }
 
@@ -226,10 +230,7 @@ export class MapperIndexService {
         this.javaMappersByUri.set(uri, mapperInfo);
       }
     } catch (error) {
-      console.warn(
-        `[MyBatis Bridge] Javaファイルのパースエラー: ${uri}`,
-        error
-      );
+      console.warn(vscode.l10n.t("[MyBatis Bridge] Java file parse error: {0}", uri), error);
     }
   }
 
