@@ -15,9 +15,11 @@ const MAPPER_NAMESPACE_PATTERN = /<mapper\s+[^>]*namespace\s*=\s*["']([^"']+)["'
 
 /**
  * statement要素を抽出するパターン（モジュールレベルで定義）
+ * - `s`フラグで`.`が改行にもマッチ
+ * - `[^>]*?`で非貪欲マッチ（複数行タグに対応）
  */
 const STATEMENT_PATTERN =
-  /<(select|insert|update|delete|resultMap)\s+[^>]*id\s*=\s*["']([^"']+)["']/gi;
+  /<(select|insert|update|delete|resultMap)\s+[^>]*?id\s*=\s*["']([^"']+)["']/gis;
 
 /**
  * XMLコンテンツがMyBatis XMLかどうかを判定
@@ -39,35 +41,37 @@ export function extractNamespace(content: string): string | null {
 
 /**
  * XMLコンテンツからstatement一覧を抽出
+ * 複数行にまたがるタグ定義にも対応
  */
 export function extractStatements(content: string): StatementLocation[] {
   const statements: StatementLocation[] = [];
-  const lines = content.split("\n");
 
-  // 各行を走査してstatementを検出
-  for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
-    const line = lines[lineIndex];
+  // グローバル正規表現のlastIndexをリセット
+  STATEMENT_PATTERN.lastIndex = 0;
 
-    // グローバル正規表現のlastIndexをリセット
-    STATEMENT_PATTERN.lastIndex = 0;
-    let match: RegExpExecArray | null;
+  let match: RegExpExecArray | null;
+  while ((match = STATEMENT_PATTERN.exec(content)) !== null) {
+    // タイプを正規化（resultMapは大文字小文字を保持）
+    const rawType = match[1].toLowerCase();
+    const type = (
+      rawType === "resultmap" ? "resultMap" : rawType
+    ) as StatementLocation["type"];
+    const id = match[2];
 
-    while ((match = STATEMENT_PATTERN.exec(line)) !== null) {
-      // タイプを正規化（resultMapは大文字小文字を保持）
-      const rawType = match[1].toLowerCase();
-      const type = (
-        rawType === "resultmap" ? "resultMap" : rawType
-      ) as StatementLocation["type"];
-      const id = match[2];
-      const column = match.index;
+    // マッチ位置から行番号を計算
+    const beforeMatch = content.substring(0, match.index);
+    const line = (beforeMatch.match(/\n/g) || []).length;
 
-      statements.push({
-        id,
-        type,
-        line: lineIndex,
-        column,
-      });
-    }
+    // カラム計算（最後の改行からの距離）
+    const lastNewline = beforeMatch.lastIndexOf("\n");
+    const column = lastNewline === -1 ? match.index : match.index - lastNewline - 1;
+
+    statements.push({
+      id,
+      type,
+      line,
+      column,
+    });
   }
 
   return statements;

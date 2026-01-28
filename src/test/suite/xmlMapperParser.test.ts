@@ -92,6 +92,59 @@ suite("XmlMapperParser Test Suite", () => {
         ["select", "insert", "update", "delete", "resultMap"]
       );
     });
+
+    test("複数行にまたがるタグ定義を抽出", () => {
+      const content = `<mapper namespace="com.example.mapper.UserMapper">
+  <select
+      id="findById"
+      resultType="User">
+    SELECT * FROM users WHERE id = #{id}
+  </select>
+</mapper>`;
+      const statements = extractStatements(content);
+      assert.strictEqual(statements.length, 1);
+      assert.strictEqual(statements[0].id, "findById");
+      assert.strictEqual(statements[0].type, "select");
+      // タグの開始行（<selectの行）
+      assert.strictEqual(statements[0].line, 1);
+    });
+
+    test("1行タグと複数行タグの混在を抽出", () => {
+      const content = `<mapper namespace="com.example.mapper.UserMapper">
+  <select id="findAll" resultType="User">SELECT * FROM users</select>
+  <insert
+      id="insertUser"
+      parameterType="User">
+    INSERT INTO users (name) VALUES (#{name})
+  </insert>
+  <update id="updateUser">UPDATE users SET name = #{name}</update>
+</mapper>`;
+      const statements = extractStatements(content);
+      assert.strictEqual(statements.length, 3);
+      assert.deepStrictEqual(
+        statements.map((s) => s.id),
+        ["findAll", "insertUser", "updateUser"]
+      );
+      assert.deepStrictEqual(
+        statements.map((s) => s.type),
+        ["select", "insert", "update"]
+      );
+    });
+
+    test("id属性が先頭以外の位置にある複数行タグを抽出", () => {
+      const content = `<mapper namespace="com.example.mapper.UserMapper">
+  <select
+      resultType="User"
+      id="findByName"
+      parameterType="String">
+    SELECT * FROM users WHERE name = #{name}
+  </select>
+</mapper>`;
+      const statements = extractStatements(content);
+      assert.strictEqual(statements.length, 1);
+      assert.strictEqual(statements[0].id, "findByName");
+      assert.strictEqual(statements[0].type, "select");
+    });
   });
 
   suite("parseXmlMapper", () => {
