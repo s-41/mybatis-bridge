@@ -15,6 +15,56 @@ const PACKAGE_PATTERN = /^\s*package\s+([\w.]+)\s*;/m;
  */
 const INTERFACE_PATTERN = /^\s*(?:public\s+)?interface\s+(\w+)/m;
 
+/**
+ * 予約語セット（モジュールレベルで定数として定義）
+ */
+const RESERVED_WORDS = new Set([
+  "if",
+  "else",
+  "for",
+  "while",
+  "do",
+  "switch",
+  "case",
+  "default",
+  "break",
+  "continue",
+  "return",
+  "try",
+  "catch",
+  "finally",
+  "throw",
+  "throws",
+  "new",
+  "this",
+  "super",
+  "class",
+  "interface",
+  "extends",
+  "implements",
+  "package",
+  "import",
+  "public",
+  "private",
+  "protected",
+  "static",
+  "final",
+  "abstract",
+  "native",
+  "synchronized",
+  "transient",
+  "volatile",
+  "void",
+  "boolean",
+  "byte",
+  "char",
+  "short",
+  "int",
+  "long",
+  "float",
+  "double",
+]);
+
 
 /**
  * Javaコンテンツからパッケージ名を抽出
@@ -30,6 +80,23 @@ export function extractPackageName(content: string): string | null {
 export function extractInterfaceName(content: string): string | null {
   const match = content.match(INTERFACE_PATTERN);
   return match ? match[1] : null;
+}
+
+/**
+ * パッケージ名とインターフェース名を一度のスキャンで同時に抽出
+ * 個別に呼び出すより効率的
+ */
+export function extractPackageAndInterface(content: string): {
+  packageName: string | null;
+  interfaceName: string | null;
+} {
+  const packageMatch = content.match(PACKAGE_PATTERN);
+  const interfaceMatch = content.match(INTERFACE_PATTERN);
+
+  return {
+    packageName: packageMatch ? packageMatch[1] : null,
+    interfaceName: interfaceMatch ? interfaceMatch[1] : null,
+  };
 }
 
 /**
@@ -73,53 +140,7 @@ export function extractMethods(content: string): MethodLocation[] {
  * 予約語やよくある戻り値型かどうかを判定
  */
 function isReservedWord(word: string): boolean {
-  const reserved = new Set([
-    "if",
-    "else",
-    "for",
-    "while",
-    "do",
-    "switch",
-    "case",
-    "default",
-    "break",
-    "continue",
-    "return",
-    "try",
-    "catch",
-    "finally",
-    "throw",
-    "throws",
-    "new",
-    "this",
-    "super",
-    "class",
-    "interface",
-    "extends",
-    "implements",
-    "package",
-    "import",
-    "public",
-    "private",
-    "protected",
-    "static",
-    "final",
-    "abstract",
-    "native",
-    "synchronized",
-    "transient",
-    "volatile",
-    "void",
-    "boolean",
-    "byte",
-    "char",
-    "short",
-    "int",
-    "long",
-    "float",
-    "double",
-  ]);
-  return reserved.has(word);
+  return RESERVED_WORDS.has(word);
 }
 
 /**
@@ -145,20 +166,20 @@ export function parseJavaMapper(
     return null;
   }
 
-  // パッケージ名を抽出
-  const packageName = extractPackageName(content);
-  if (!packageName) {
-    return null;
-  }
-
-  // インターフェース名を抽出
-  const interfaceName = extractInterfaceName(content);
-  if (!interfaceName) {
+  // パッケージ名とインターフェース名を同時抽出（効率化）
+  const { packageName, interfaceName } = extractPackageAndInterface(content);
+  if (!packageName || !interfaceName) {
     return null;
   }
 
   // メソッド一覧を抽出
   const methods = extractMethods(content);
+
+  // O(1)検索用のMapを生成
+  const methodMap = new Map<string, MethodLocation>();
+  for (const method of methods) {
+    methodMap.set(method.name, method);
+  }
 
   return {
     uri,
@@ -166,6 +187,7 @@ export function parseJavaMapper(
     interfaceName,
     fullyQualifiedName: `${packageName}.${interfaceName}`,
     methods,
+    methodMap,
   };
 }
 

@@ -38,6 +38,8 @@ export interface XmlMapperInfo {
   namespace: string;
   /** ファイル内のstatement一覧 */
   statements: StatementLocation[];
+  /** statement id → StatementLocation のマップ（O(1)検索用） */
+  statementMap: Map<string, StatementLocation>;
 }
 
 /**
@@ -54,6 +56,8 @@ export interface JavaMapperInfo {
   interfaceName: string;
   /** メソッド一覧 */
   methods: MethodLocation[];
+  /** メソッド名 → MethodLocation のマップ（O(1)検索用） */
+  methodMap: Map<string, MethodLocation>;
 }
 
 /**

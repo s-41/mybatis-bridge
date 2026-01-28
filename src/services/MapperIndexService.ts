@@ -145,7 +145,7 @@ export class MapperIndexService {
   }
 
   /**
-   * XMLマッパーファイルをスキャン
+   * XMLマッパーファイルをスキャン（並列処理で高速化）
    */
   private async scanXmlMappers(): Promise<void> {
     const patterns = this.getXmlPatterns();
@@ -156,13 +156,12 @@ export class MapperIndexService {
       "**/node_modules/**"
     );
 
-    for (const file of files) {
-      await this.indexXmlFile(file.toString());
-    }
+    // 並列処理でファイルをインデックス
+    await Promise.all(files.map((file) => this.indexXmlFile(file.toString())));
   }
 
   /**
-   * Javaマッパーファイルをスキャン
+   * Javaマッパーファイルをスキャン（並列処理で高速化）
    */
   private async scanJavaMappers(): Promise<void> {
     const patterns = this.getJavaPatterns();
@@ -173,9 +172,8 @@ export class MapperIndexService {
       "**/node_modules/**"
     );
 
-    for (const file of files) {
-      await this.indexJavaFile(file.toString());
-    }
+    // 並列処理でファイルをインデックス
+    await Promise.all(files.map((file) => this.indexJavaFile(file.toString())));
   }
 
   /**
@@ -323,7 +321,8 @@ export class MapperIndexService {
       return undefined;
     }
 
-    const statement = xmlMapper.statements.find((s) => s.id === statementId);
+    // O(1)検索: Mapを使用
+    const statement = xmlMapper.statementMap.get(statementId);
     if (!statement) {
       return undefined;
     }
@@ -346,7 +345,8 @@ export class MapperIndexService {
       return undefined;
     }
 
-    const method = javaMapper.methods.find((m) => m.name === methodName);
+    // O(1)検索: Mapを使用
+    const method = javaMapper.methodMap.get(methodName);
     if (!method) {
       return undefined;
     }

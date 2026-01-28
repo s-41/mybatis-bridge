@@ -14,6 +14,12 @@ const MYBATIS_DOCTYPE_PATTERN = /<!DOCTYPE\s+mapper[^>]*mybatis/i;
 const MAPPER_NAMESPACE_PATTERN = /<mapper\s+[^>]*namespace\s*=\s*["']([^"']+)["']/;
 
 /**
+ * statement要素を抽出するパターン（モジュールレベルで定義）
+ */
+const STATEMENT_PATTERN =
+  /<(select|insert|update|delete|resultMap)\s+[^>]*id\s*=\s*["']([^"']+)["']/gi;
+
+/**
  * XMLコンテンツがMyBatis XMLかどうかを判定
  */
 export function isMyBatisXml(content: string): boolean {
@@ -42,12 +48,11 @@ export function extractStatements(content: string): StatementLocation[] {
   for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
     const line = lines[lineIndex];
 
-    // statementパターンをリセットして再検索
-    const statementRegex =
-      /<(select|insert|update|delete|resultMap)\s+[^>]*id\s*=\s*["']([^"']+)["']/gi;
+    // グローバル正規表現のlastIndexをリセット
+    STATEMENT_PATTERN.lastIndex = 0;
     let match: RegExpExecArray | null;
 
-    while ((match = statementRegex.exec(line)) !== null) {
+    while ((match = STATEMENT_PATTERN.exec(line)) !== null) {
       // タイプを正規化（resultMapは大文字小文字を保持）
       const rawType = match[1].toLowerCase();
       const type = (
@@ -92,10 +97,17 @@ export function parseXmlMapper(
   // statement一覧を抽出
   const statements = extractStatements(content);
 
+  // O(1)検索用のMapを生成
+  const statementMap = new Map<string, StatementLocation>();
+  for (const statement of statements) {
+    statementMap.set(statement.id, statement);
+  }
+
   return {
     uri,
     namespace,
     statements,
+    statementMap,
   };
 }
 
