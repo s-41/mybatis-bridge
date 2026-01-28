@@ -86,7 +86,7 @@ export function extractInterfaceName(content: string): string | null {
  * パッケージ名とインターフェース名を一度のスキャンで同時に抽出
  * 個別に呼び出すより効率的
  */
-export function extractPackageAndInterface(content: string): {
+function extractPackageAndInterface(content: string): {
   packageName: string | null;
   interfaceName: string | null;
 } {
@@ -191,37 +191,3 @@ export function parseJavaMapper(
   };
 }
 
-/**
- * 指定した行・列がメソッド名上かどうかを判定し、メソッド名を返す
- * @param content Javaファイルの内容
- * @param line カーソル行（0-based）
- * @param column カーソル列（0-based）
- * @returns メソッド名、またはnull
- */
-export function getMethodNameAtPosition(
-  content: string,
-  line: number,
-  column: number
-): string | null {
-  const lines = content.split("\n");
-  if (line < 0 || line >= lines.length) {
-    return null;
-  }
-
-  const methods = extractMethods(content);
-
-  // 該当行のメソッドを検索
-  for (const method of methods) {
-    if (method.line === line) {
-      // カーソルがメソッド名の範囲内にあるかチェック
-      const startCol = method.column;
-      const endCol = startCol + method.name.length;
-
-      if (column >= startCol && column <= endCol) {
-        return method.name;
-      }
-    }
-  }
-
-  return null;
-}
