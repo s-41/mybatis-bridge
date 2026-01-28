@@ -22,7 +22,7 @@ const DEFAULT_XML_PATTERNS = ["**/resources/**/*.xml", "**/*Mapper.xml"];
 /**
  * デフォルトのJavaマッパーパターン
  */
-const DEFAULT_JAVA_PATTERNS = ["**/*Mapper.java", "**/*Dao.java"];
+const DEFAULT_JAVA_PATTERNS = ["**/*Mapper.java", "**/*Dao.java", "**/*Repository.java"];
 
 /**
  * Mapperインデックスサービス（シングルトン）

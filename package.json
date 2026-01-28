@@ -30,7 +30,8 @@
           },
           "default": [
             "**/*Mapper.java",
-            "**/*Dao.java"
+            "**/*Dao.java",
+            "**/*Repository.java"
           ],
           "description": "JavaのMapperインターフェースを検索するためのglobパターン"
         },
