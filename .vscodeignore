@@ -1,0 +1,29 @@
+# Source files (only dist is needed)
+src/**
+.vscode/**
+.vscode-test/**
+
+# Config files
+.gitignore
+.eslintrc*
+eslint.config.mjs
+tsconfig.json
+esbuild.js
+**/*.map
+
+# Package manager
+node_modules/**
+pnpm-lock.yaml
+package-lock.json
+
+# Development files
+**/*.ts
+!dist/**/*.d.ts
+
+# Test files
+**/test/**
+coverage/**
+
+# Other
+.DS_Store
+*.vsix
