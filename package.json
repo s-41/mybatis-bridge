@@ -11,17 +11,42 @@
     "node": ">=20.0.0"
   },
   "categories": [
+    "Programming Languages",
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onLanguage:java",
+    "onLanguage:xml"
+  ],
   "main": "./dist/extension.js",
   "contributes": {
-    "commands": [
-      {
-        "command": "mybatis-bridge.helloWorld",
-        "title": "Hello World"
+    "configuration": {
+      "title": "MyBatis Bridge",
+      "properties": {
+        "mybatis-bridge.javaMapperPatterns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "**/*Mapper.java",
+            "**/*Dao.java"
+          ],
+          "description": "JavaのMapperインターフェースを検索するためのglobパターン"
+        },
+        "mybatis-bridge.xmlMapperPatterns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "**/resources/**/*.xml",
+            "**/*Mapper.xml"
+          ],
+          "description": "MyBatis XMLファイルを検索するためのglobパターン"
+        }
       }
-    ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "pnpm run package",
@@ -37,6 +62,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
+    "@types/glob": "^9.0.0",
     "@types/mocha": "^10.0.10",
     "@types/node": "22.x",
     "@types/vscode": "^1.96.0",
@@ -44,6 +70,8 @@
     "@vscode/test-electron": "^2.5.2",
     "esbuild": "^0.24.0",
     "eslint": "^9.16.0",
+    "glob": "^13.0.0",
+    "mocha": "^11.7.5",
     "npm-run-all2": "^8.0.4",
     "typescript": "^5.7.2",
     "typescript-eslint": "^8.54.0"

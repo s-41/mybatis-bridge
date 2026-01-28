@@ -27,6 +27,7 @@ const esbuildProblemMatcherPlugin = {
 };
 
 async function main() {
+  // メイン拡張機能のビルド
   const ctx = await esbuild.context({
     entryPoints: ["src/extension.ts"],
     bundle: true,
@@ -41,11 +42,26 @@ async function main() {
     plugins: [esbuildProblemMatcherPlugin],
   });
 
+  // テストファイルのビルド
+  const testCtx = await esbuild.context({
+    entryPoints: ["src/test/**/*.ts"],
+    bundle: true,
+    format: "cjs",
+    minify: false,
+    sourcemap: true,
+    sourcesContent: false,
+    platform: "node",
+    outdir: "dist/test",
+    external: ["vscode", "mocha", "assert"],
+    logLevel: "silent",
+    plugins: [esbuildProblemMatcherPlugin],
+  });
+
   if (watch) {
-    await ctx.watch();
+    await Promise.all([ctx.watch(), testCtx.watch()]);
   } else {
-    await ctx.rebuild();
-    await ctx.dispose();
+    await Promise.all([ctx.rebuild(), testCtx.rebuild()]);
+    await Promise.all([ctx.dispose(), testCtx.dispose()]);
   }
 }
 
