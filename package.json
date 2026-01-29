@@ -3,8 +3,17 @@
   "displayName": "%displayName%",
   "description": "%description%",
   "version": "0.0.1",
-  "publisher": "your-publisher-name",
+  "publisher": "SAKASHIN",
   "license": "MIT",
+  "icon": "images/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/s-41/mybatis-bridge.git"
+  },
+  "bugs": {
+    "url": "https://github.com/s-41/mybatis-bridge/issues"
+  },
+  "homepage": "https://github.com/s-41/mybatis-bridge#readme",
   "packageManager": "pnpm@9.15.4",
   "engines": {
     "vscode": "^1.96.0",
@@ -13,6 +22,17 @@
   "categories": [
     "Programming Languages",
     "Other"
+  ],
+  "keywords": [
+    "mybatis",
+    "mapper",
+    "java",
+    "xml",
+    "navigation",
+    "go to definition",
+    "ibatis",
+    "spring",
+    "sql"
   ],
   "activationEvents": [
     "onLanguage:java",
@@ -70,7 +90,7 @@
     "@types/vscode": "^1.96.0",
     "@vscode/test-cli": "^0.0.12",
     "@vscode/test-electron": "^2.5.2",
-    "esbuild": "^0.24.0",
+    "esbuild": "^0.25.0",
     "eslint": "^9.16.0",
     "glob": "^13.0.0",
     "mocha": "^11.7.5",

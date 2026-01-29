@@ -24,6 +24,13 @@ package-lock.json
 **/test/**
 coverage/**
 
+# Claude Code
+.claude/**
+CLAUDE.md
+
+# Test configuration
+.vscode-test.mjs
+
 # Other
 .DS_Store
 *.vsix
