@@ -23,6 +23,17 @@
     "Programming Languages",
     "Other"
   ],
+  "keywords": [
+    "mybatis",
+    "mapper",
+    "java",
+    "xml",
+    "navigation",
+    "go to definition",
+    "ibatis",
+    "spring",
+    "sql"
+  ],
   "activationEvents": [
     "onLanguage:java",
     "onLanguage:xml"
