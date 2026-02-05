@@ -47,33 +47,21 @@ export function activate(context: vscode.ExtensionContext): void {
   console.log(vscode.l10n.t("[MyBatis Bridge] CodeLensProvider registered"));
 
   // CodeLensのジャンプコマンドを登録
-  const goToMapperXmlCommand = vscode.commands.registerCommand(
-    "mybatis-bridge.goToMapperXml",
-    async (uri: vscode.Uri, position: vscode.Position) => {
-      const document = await vscode.workspace.openTextDocument(uri);
-      const editor = await vscode.window.showTextDocument(document);
-      editor.selection = new vscode.Selection(position, position);
-      editor.revealRange(
-        new vscode.Range(position, position),
-        vscode.TextEditorRevealType.InCenter
-      );
-    }
-  );
-  context.subscriptions.push(goToMapperXmlCommand);
+  // 共通のジャンプ処理
+  const goToLocation = async (uri: vscode.Uri, position: vscode.Position) => {
+    const document = await vscode.workspace.openTextDocument(uri);
+    const editor = await vscode.window.showTextDocument(document);
+    editor.selection = new vscode.Selection(position, position);
+    editor.revealRange(
+      new vscode.Range(position, position),
+      vscode.TextEditorRevealType.InCenter
+    );
+  };
 
-  const goToMapperInterfaceCommand = vscode.commands.registerCommand(
-    "mybatis-bridge.goToMapperInterface",
-    async (uri: vscode.Uri, position: vscode.Position) => {
-      const document = await vscode.workspace.openTextDocument(uri);
-      const editor = await vscode.window.showTextDocument(document);
-      editor.selection = new vscode.Selection(position, position);
-      editor.revealRange(
-        new vscode.Range(position, position),
-        vscode.TextEditorRevealType.InCenter
-      );
-    }
+  context.subscriptions.push(
+    vscode.commands.registerCommand("mybatis-bridge.goToMapperXml", goToLocation),
+    vscode.commands.registerCommand("mybatis-bridge.goToMapperInterface", goToLocation)
   );
-  context.subscriptions.push(goToMapperInterfaceCommand);
 }
 
 /**

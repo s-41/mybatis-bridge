@@ -12,14 +12,7 @@ import {
   extractMethods,
   isMapperInterface,
 } from "../services/JavaMapperParser";
-
-/**
- * CodeLens設定が有効かどうかを確認
- */
-function isCodeLensEnabled(): boolean {
-  const config = vscode.workspace.getConfiguration("mybatis-bridge");
-  return config.get<boolean>("enableCodeLens") ?? true;
-}
+import { isCodeLensEnabled } from "../utils";
 
 /**
  * Java → XML ジャンプのCodeLensProvider
@@ -84,7 +77,7 @@ export class JavaToXmlCodeLensProvider implements vscode.CodeLensProvider {
       );
 
       const codeLens = new vscode.CodeLens(range, {
-        title: "Go to Mapper XML",
+        title: vscode.l10n.t("Go to Mapper XML"),
         command: "mybatis-bridge.goToMapperXml",
         arguments: [
           vscode.Uri.parse(result.uri),

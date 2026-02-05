@@ -7,5 +7,7 @@
   "[MyBatis Bridge] Index initialization complete: XML {0} files, Java {1} files": "[MyBatis Bridge] Index initialization complete: XML {0} files, Java {1} files",
   "[MyBatis Bridge] Index initialization error:": "[MyBatis Bridge] Index initialization error:",
   "[MyBatis Bridge] XML file parse error: {0}": "[MyBatis Bridge] XML file parse error: {0}",
-  "[MyBatis Bridge] Java file parse error: {0}": "[MyBatis Bridge] Java file parse error: {0}"
+  "[MyBatis Bridge] Java file parse error: {0}": "[MyBatis Bridge] Java file parse error: {0}",
+  "Go to Mapper XML": "Go to Mapper XML",
+  "Go to Mapper Interface": "Go to Mapper Interface"
 }
