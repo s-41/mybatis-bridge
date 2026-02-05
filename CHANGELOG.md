@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-02-06
+
+### Changed
+
+- README.mdにCodeLens機能の説明を追加
+
 ## [0.1.0] - 2026-02-05
 
 ### Added
@@ -40,6 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `@Param`アノテーション付き引数を持つメソッドの検出対応
 - 複数行にまたがるXMLタグ定義の検出対応
 
-[Unreleased]: https://github.com/s-41/mybatis-bridge/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/s-41/mybatis-bridge/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/s-41/mybatis-bridge/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/s-41/mybatis-bridge/compare/v0.0.1...v0.1.0
 [0.0.1]: https://github.com/s-41/mybatis-bridge/releases/tag/v0.0.1
