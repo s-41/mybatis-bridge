@@ -4,5 +4,6 @@
   "configuration.title": "MyBatis Bridge",
   "configuration.javaMapperPatterns.description": "Glob patterns to search for Java Mapper interfaces",
   "configuration.xmlMapperPatterns.description": "Glob patterns to search for MyBatis XML files",
-  "configuration.enableCodeLens.description": "Enable CodeLens to show navigation links between Java Mapper and XML"
+  "configuration.enableCodeLens.description": "Enable CodeLens to show navigation links between Java Mapper and XML",
+  "configuration.enableMapperUsageCodeLens.description": "Enable CodeLens on Mapper method calls in Service/Controller classes to navigate to Mapper XML"
 }

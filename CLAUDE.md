@@ -25,12 +25,15 @@ pnpm run check-types
 pnpm run lint
 pnpm run lint:fix
 
-# テスト実行
+# テスト実行（VS Code環境が必要）
 pnpm run test
 
 # 本番用パッケージング
 pnpm run package
 ```
+
+### デバッグ実行
+VS Codeでプロジェクトを開き、F5キーで拡張機能をデバッグ実行（Extension Development Host起動）。`.vscode/launch.json`に`Run Extension`と`Extension Tests`の構成あり。
 
 ## アーキテクチャ
 
@@ -38,9 +41,7 @@ pnpm run package
 - **esbuild**: バンドラーとして使用（`esbuild.js`で設定）
 - **TypeScript**: 型チェックのみ（`noEmit: true`）、実際のトランスパイルはesbuildが担当
 - `vscode`モジュールはexternalとして扱い、バンドルに含めない
-
-### エントリーポイント
-- `src/extension.ts` → `dist/extension.js`にバンドル
+- エントリーポイント: `src/extension.ts` → `dist/extension.js`
 
 ### コア機能の仕組み
 
@@ -49,6 +50,13 @@ VS Codeの`DefinitionProvider` APIを使用し、"Go to Definition"（Ctrl/Cmd+C
 
 - **Java → XML**: `JavaToXmlDefinitionProvider` - Mapperインターフェースのメソッド名からXMLのstatement（select/insert/update/delete/resultMap）へジャンプ
 - **XML → Java**: `XmlToJavaDefinitionProvider` - XMLのstatement id属性値からJavaのメソッド定義へジャンプ
+
+#### CodeLensナビゲーション
+`CodeLensProvider` APIを使用し、コード上にジャンプリンクを表示。
+
+- **JavaToXmlCodeLensProvider**: Javaのメソッド上に「Go to Mapper XML」リンクを表示
+- **XmlToJavaCodeLensProvider**: XMLのstatement上に「Go to Mapper Interface」リンクを表示
+- `mybatis-bridge.enableCodeLens`設定で有効/無効を切り替え可能（デフォルト: 有効）
 
 #### MapperIndexService（シングルトン）
 ワークスペース内のMapperファイルをインデックス化し、高速な検索を実現。
@@ -64,31 +72,5 @@ AST不要の軽量パーサーで高速処理。
 - `XmlMapperParser`: namespace抽出、statement（id属性）抽出、MyBatis XML判定
 - `JavaMapperParser`: package名、interface名、メソッド名の抽出
 
-### ディレクトリ構成
-
-```
-src/
-├── extension.ts          # エントリーポイント（activate/deactivate）
-├── types/                # 型定義
-│   └── mapper.ts         # XmlMapperInfo, JavaMapperInfo, StatementLocation等
-├── providers/            # VS Code DefinitionProvider実装
-│   ├── JavaToXmlDefinitionProvider.ts
-│   └── XmlToJavaDefinitionProvider.ts
-└── services/             # ビジネスロジック
-    ├── MapperIndexService.ts  # インデックス管理（シングルトン）
-    ├── XmlMapperParser.ts     # XMLパーサー
-    └── JavaMapperParser.ts    # Javaパーサー
-```
-
-### VS Code拡張機能の開発
-- VS Codeでプロジェクトを開き、F5キーで拡張機能をデバッグ実行（Extension Development Host起動）
-- `Run Extension`構成で拡張機能をテスト
-- `Extension Tests`構成でテストを実行
-
-## 技術スタック
-
-- Node.js 20+
-- pnpm 9.x
-- VS Code 1.96.0+
-- TypeScript 5.x
-- ESLint 9.x（Flat Config形式）
+### 国際化（i18n）
+`l10n/`ディレクトリにローカライズファイルを配置。`package.nls.json`（英語）と`package.nls.ja.json`（日本語）でUI文字列を管理。package.jsonでは`%key%`形式で参照

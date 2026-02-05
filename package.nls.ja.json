@@ -4,5 +4,6 @@
   "configuration.title": "MyBatis Bridge",
   "configuration.javaMapperPatterns.description": "JavaのMapperインターフェースを検索するためのglobパターン",
   "configuration.xmlMapperPatterns.description": "MyBatis XMLファイルを検索するためのglobパターン",
-  "configuration.enableCodeLens.description": "JavaマッパーとXML間のナビゲーションリンクをCodeLensで表示する"
+  "configuration.enableCodeLens.description": "JavaマッパーとXML間のナビゲーションリンクをCodeLensで表示する",
+  "configuration.enableMapperUsageCodeLens.description": "Service/ControllerクラスでのMapperメソッド呼び出し箇所にMapper XMLへのCodeLensを表示する"
 }
