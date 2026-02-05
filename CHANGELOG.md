@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-02-05
+
+### Added
+
+- **CodeLensナビゲーション機能** (#3)
+  - Javaのメソッド上に「Go to Mapper XML」リンクを表示
+  - XMLのstatement上に「Go to Mapper Interface」リンクを表示
+  - `mybatis-bridge.enableCodeLens`設定で有効/無効を切り替え可能
+- **Mapper呼び出し元からのXMLジャンプ機能** (#5)
+  - ServiceクラスなどでMapperを呼び出している箇所に「Go to Mapper XML」リンクを表示
+  - `mybatis-bridge.enableMapperUsageCodeLens`設定で有効/無効を切り替え可能
+
+### Security
+
+- 依存関係のセキュリティ脆弱性を修正 (#6)
+
 ## [0.0.1] - 2025-01-28
 
 ### Added
@@ -24,5 +40,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `@Param`アノテーション付き引数を持つメソッドの検出対応
 - 複数行にまたがるXMLタグ定義の検出対応
 
-[Unreleased]: https://github.com/s-41/mybatis-bridge/compare/v0.0.1...HEAD
+[Unreleased]: https://github.com/s-41/mybatis-bridge/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/s-41/mybatis-bridge/compare/v0.0.1...v0.1.0
 [0.0.1]: https://github.com/s-41/mybatis-bridge/releases/tag/v0.0.1
