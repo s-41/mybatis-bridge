@@ -1,6 +1,7 @@
 {
   "Extension \"mybatis-bridge\" has been activated": "Extension \"mybatis-bridge\" has been activated",
   "[MyBatis Bridge] DefinitionProvider registered": "[MyBatis Bridge] DefinitionProvider registered",
+  "[MyBatis Bridge] CodeLensProvider registered": "[MyBatis Bridge] CodeLensProvider registered",
   "[MyBatis Bridge] Resources released": "[MyBatis Bridge] Resources released",
   "[MyBatis Bridge] Starting index initialization...": "[MyBatis Bridge] Starting index initialization...",
   "[MyBatis Bridge] Index initialization complete: XML {0} files, Java {1} files": "[MyBatis Bridge] Index initialization complete: XML {0} files, Java {1} files",

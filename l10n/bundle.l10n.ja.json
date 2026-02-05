@@ -1,6 +1,7 @@
 {
   "Extension \"mybatis-bridge\" has been activated": "拡張機能 \"mybatis-bridge\" がアクティブ化されました",
   "[MyBatis Bridge] DefinitionProvider registered": "[MyBatis Bridge] DefinitionProviderを登録しました",
+  "[MyBatis Bridge] CodeLensProvider registered": "[MyBatis Bridge] CodeLensProviderを登録しました",
   "[MyBatis Bridge] Resources released": "[MyBatis Bridge] リソースを解放しました",
   "[MyBatis Bridge] Starting index initialization...": "[MyBatis Bridge] インデックスの初期化を開始...",
   "[MyBatis Bridge] Index initialization complete: XML {0} files, Java {1} files": "[MyBatis Bridge] インデックス初期化完了: XML {0}件, Java {1}件",

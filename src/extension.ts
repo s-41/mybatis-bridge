@@ -2,6 +2,8 @@ import * as vscode from "vscode";
 import {
   JavaToXmlDefinitionProvider,
   XmlToJavaDefinitionProvider,
+  JavaToXmlCodeLensProvider,
+  XmlToJavaCodeLensProvider,
 } from "./providers";
 import { MapperIndexService } from "./services";
 
@@ -27,6 +29,51 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(xmlToJavaProvider);
 
   console.log(vscode.l10n.t("[MyBatis Bridge] DefinitionProvider registered"));
+
+  // Java → XML ジャンプのCodeLensProviderを登録
+  const javaToXmlCodeLensProvider = vscode.languages.registerCodeLensProvider(
+    { language: "java", scheme: "file" },
+    new JavaToXmlCodeLensProvider()
+  );
+  context.subscriptions.push(javaToXmlCodeLensProvider);
+
+  // XML → Java ジャンプのCodeLensProviderを登録
+  const xmlToJavaCodeLensProvider = vscode.languages.registerCodeLensProvider(
+    { language: "xml", scheme: "file" },
+    new XmlToJavaCodeLensProvider()
+  );
+  context.subscriptions.push(xmlToJavaCodeLensProvider);
+
+  console.log(vscode.l10n.t("[MyBatis Bridge] CodeLensProvider registered"));
+
+  // CodeLensのジャンプコマンドを登録
+  const goToMapperXmlCommand = vscode.commands.registerCommand(
+    "mybatis-bridge.goToMapperXml",
+    async (uri: vscode.Uri, position: vscode.Position) => {
+      const document = await vscode.workspace.openTextDocument(uri);
+      const editor = await vscode.window.showTextDocument(document);
+      editor.selection = new vscode.Selection(position, position);
+      editor.revealRange(
+        new vscode.Range(position, position),
+        vscode.TextEditorRevealType.InCenter
+      );
+    }
+  );
+  context.subscriptions.push(goToMapperXmlCommand);
+
+  const goToMapperInterfaceCommand = vscode.commands.registerCommand(
+    "mybatis-bridge.goToMapperInterface",
+    async (uri: vscode.Uri, position: vscode.Position) => {
+      const document = await vscode.workspace.openTextDocument(uri);
+      const editor = await vscode.window.showTextDocument(document);
+      editor.selection = new vscode.Selection(position, position);
+      editor.revealRange(
+        new vscode.Range(position, position),
+        vscode.TextEditorRevealType.InCenter
+      );
+    }
+  );
+  context.subscriptions.push(goToMapperInterfaceCommand);
 }
 
 /**

@@ -66,6 +66,11 @@
             "**/*Mapper.xml"
           ],
           "description": "%configuration.xmlMapperPatterns.description%"
+        },
+        "mybatis-bridge.enableCodeLens": {
+          "type": "boolean",
+          "default": true,
+          "description": "%configuration.enableCodeLens.description%"
         }
       }
     }
