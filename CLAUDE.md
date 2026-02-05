@@ -56,7 +56,9 @@ VS Codeの`DefinitionProvider` APIを使用し、"Go to Definition"（Ctrl/Cmd+C
 
 - **JavaToXmlCodeLensProvider**: Javaのメソッド上に「Go to Mapper XML」リンクを表示
 - **XmlToJavaCodeLensProvider**: XMLのstatement上に「Go to Mapper Interface」リンクを表示
+- **MapperUsageCodeLensProvider**: ServiceクラスなどでMapperを呼び出している箇所に「Go to Mapper XML」リンクを表示
 - `mybatis-bridge.enableCodeLens`設定で有効/無効を切り替え可能（デフォルト: 有効）
+- `mybatis-bridge.enableMapperUsageCodeLens`設定でMapper呼び出し箇所のCodeLensを有効/無効に切り替え可能（デフォルト: 有効）
 
 #### MapperIndexService（シングルトン）
 ワークスペース内のMapperファイルをインデックス化し、高速な検索を実現。
@@ -71,6 +73,7 @@ AST不要の軽量パーサーで高速処理。
 
 - `XmlMapperParser`: namespace抽出、statement（id属性）抽出、MyBatis XML判定
 - `JavaMapperParser`: package名、interface名、メソッド名の抽出
+- `MapperUsageParser`: import文解析、Mapperフィールド抽出、メソッド呼び出し検出
 
 ### 国際化（i18n）
 `l10n/`ディレクトリにローカライズファイルを配置。`package.nls.json`（英語）と`package.nls.ja.json`（日本語）でUI文字列を管理。package.jsonでは`%key%`形式で参照
