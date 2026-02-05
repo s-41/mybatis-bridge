@@ -9,3 +9,4 @@ export { XmlToJavaDefinitionProvider } from "./XmlToJavaDefinitionProvider";
  */
 export { JavaToXmlCodeLensProvider } from "./JavaToXmlCodeLensProvider";
 export { XmlToJavaCodeLensProvider } from "./XmlToJavaCodeLensProvider";
+export { MapperUsageCodeLensProvider } from "./MapperUsageCodeLensProvider";

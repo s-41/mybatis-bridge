@@ -64,3 +64,33 @@ export interface JavaMapperInfo {
  * インデックスの状態
  */
 export type IndexState = "uninitialized" | "initializing" | "ready";
+
+/**
+ * Serviceクラス等で検出されたMapperフィールドの情報
+ */
+export interface MapperFieldInfo {
+  /** フィールド名（例: "userMapper"） */
+  fieldName: string;
+  /** Mapper型名（例: "UserMapper"） */
+  mapperType: string;
+  /** 完全修飾名（例: "com.example.mapper.UserMapper"） */
+  mapperFqn: string;
+  /** 行番号（0-based） */
+  line: number;
+}
+
+/**
+ * Mapperメソッド呼び出しの情報
+ */
+export interface MapperCallInfo {
+  /** フィールド名（例: "userMapper"） */
+  fieldName: string;
+  /** メソッド名（例: "findById"） */
+  methodName: string;
+  /** 行番号（0-based） */
+  line: number;
+  /** 列番号（0-based） */
+  column: number;
+  /** 解決済みの完全修飾名 */
+  mapperFqn: string;
+}

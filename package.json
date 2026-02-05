@@ -71,6 +71,11 @@
           "type": "boolean",
           "default": true,
           "description": "%configuration.enableCodeLens.description%"
+        },
+        "mybatis-bridge.enableMapperUsageCodeLens": {
+          "type": "boolean",
+          "default": true,
+          "description": "%configuration.enableMapperUsageCodeLens.description%"
         }
       }
     }

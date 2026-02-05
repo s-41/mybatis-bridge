@@ -359,6 +359,14 @@ export class MapperIndexService {
   }
 
   /**
+   * 既知のMapper FQNのセットを取得
+   * @returns Mapper完全修飾名のセット
+   */
+  getKnownMapperFqns(): Set<string> {
+    return new Set(this.javaMappersByFqn.keys());
+  }
+
+  /**
    * リソースを解放
    */
   dispose(): void {

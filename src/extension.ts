@@ -4,6 +4,7 @@ import {
   XmlToJavaDefinitionProvider,
   JavaToXmlCodeLensProvider,
   XmlToJavaCodeLensProvider,
+  MapperUsageCodeLensProvider,
 } from "./providers";
 import { MapperIndexService } from "./services";
 
@@ -43,6 +44,13 @@ export function activate(context: vscode.ExtensionContext): void {
     new XmlToJavaCodeLensProvider()
   );
   context.subscriptions.push(xmlToJavaCodeLensProvider);
+
+  // Mapper呼び出し箇所のCodeLensProviderを登録
+  const mapperUsageCodeLensProvider = vscode.languages.registerCodeLensProvider(
+    { language: "java", scheme: "file" },
+    new MapperUsageCodeLensProvider()
+  );
+  context.subscriptions.push(mapperUsageCodeLensProvider);
 
   console.log(vscode.l10n.t("[MyBatis Bridge] CodeLensProvider registered"));
 
