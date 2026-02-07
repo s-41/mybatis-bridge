@@ -4,6 +4,7 @@
  */
 
 import type { JavaMapperInfo, MethodLocation } from "../types";
+import { sanitizeJavaContent } from "../utils";
 
 /**
  * パッケージ宣言を抽出するパターン
@@ -13,7 +14,8 @@ const PACKAGE_PATTERN = /^\s*package\s+([\w.]+)\s*;/m;
 /**
  * インターフェース宣言を抽出するパターン
  */
-const INTERFACE_PATTERN = /^\s*(?:public\s+)?interface\s+(\w+)/m;
+const INTERFACE_PATTERN =
+  /^\s*(?:@\w+(?:\([^)]*\))?\s+)*(?:public\s+)?(?:interface|abstract\s+class)\s+(\w+)/m;
 
 /**
  * 開き括弧の位置から対応する閉じ括弧の位置を返す
@@ -91,7 +93,8 @@ const RESERVED_WORDS = new Set([
  * Javaコンテンツからパッケージ名を抽出
  */
 export function extractPackageName(content: string): string | null {
-  const match = content.match(PACKAGE_PATTERN);
+  const sanitized = sanitizeJavaContent(content);
+  const match = sanitized.match(PACKAGE_PATTERN);
   return match ? match[1] : null;
 }
 
@@ -99,7 +102,8 @@ export function extractPackageName(content: string): string | null {
  * Javaコンテンツからインターフェース名を抽出
  */
 export function extractInterfaceName(content: string): string | null {
-  const match = content.match(INTERFACE_PATTERN);
+  const sanitized = sanitizeJavaContent(content);
+  const match = sanitized.match(INTERFACE_PATTERN);
   return match ? match[1] : null;
 }
 
@@ -111,8 +115,9 @@ function extractPackageAndInterface(content: string): {
   packageName: string | null;
   interfaceName: string | null;
 } {
-  const packageMatch = content.match(PACKAGE_PATTERN);
-  const interfaceMatch = content.match(INTERFACE_PATTERN);
+  const sanitized = sanitizeJavaContent(content);
+  const packageMatch = sanitized.match(PACKAGE_PATTERN);
+  const interfaceMatch = sanitized.match(INTERFACE_PATTERN);
 
   return {
     packageName: packageMatch ? packageMatch[1] : null,
@@ -126,7 +131,8 @@ function extractPackageAndInterface(content: string): {
  */
 export function extractMethods(content: string): MethodLocation[] {
   const methods: MethodLocation[] = [];
-  const lines = content.split("\n");
+  const sanitized = sanitizeJavaContent(content);
+  const lines = sanitized.split("\n");
 
   // 各行を走査してメソッドを検出
   for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
@@ -135,7 +141,8 @@ export function extractMethods(content: string): MethodLocation[] {
     // Step 1: 戻り値型 + メソッド名 + 開き括弧を検出
     // インターフェースのメソッド定義: 戻り値型 メソッド名(引数);
     // 戻り値型は List<User> や Map<String, Object> などジェネリクスを含む可能性がある
-    const signatureMatch = line.match(/(?:[\w<>,\s]+)\s+(\w+)\s*\(/);
+    // 配列型（User[], byte[]）にも対応するため [] を文字クラスに含める
+    const signatureMatch = line.match(/(?:[\w<>,\s[\]?]+)\s+(\w+)\s*\(/);
     if (!signatureMatch) {
       continue;
     }
@@ -149,20 +156,59 @@ export function extractMethods(content: string): MethodLocation[] {
     // @Param("email") のようなネストした括弧に対応
     const openParenIndex = line.indexOf("(", signatureMatch.index!);
     const closeParenIndex = findMatchingParen(line, openParenIndex);
-    if (closeParenIndex === -1) {
-      continue;
-    }
 
-    // Step 3: 閉じ括弧の後に ; または { があるか確認（throws句も許容）
-    const afterParen = line.substring(closeParenIndex + 1).trim();
-    if (!/^(?:throws\s+[\w,\s]+)?\s*[;{]/.test(afterParen)) {
-      continue;
+    // 複数行対応: 閉じ括弧が同一行にない場合、後続行を走査
+    if (closeParenIndex === -1) {
+      let depth = 0;
+      for (let i = openParenIndex; i < line.length; i++) {
+        if (line[i] === "(") {
+          depth++;
+        } else if (line[i] === ")") {
+          depth--;
+        }
+      }
+
+      let closeLine = -1;
+      let closeCol = -1;
+      for (let j = lineIndex + 1; j < lines.length && depth > 0; j++) {
+        for (let i = 0; i < lines[j].length; i++) {
+          if (lines[j][i] === "(") {
+            depth++;
+          } else if (lines[j][i] === ")") {
+            depth--;
+            if (depth === 0) {
+              closeLine = j;
+              closeCol = i;
+              break;
+            }
+          }
+        }
+        if (depth === 0) {
+          break;
+        }
+      }
+
+      if (closeLine === -1) {
+        continue;
+      }
+
+      // 閉じ括弧の後の文字列で ; または { を確認
+      const afterParen = lines[closeLine].substring(closeCol + 1).trim();
+      if (!/^(?:throws\s+[\w,\s]+)?\s*[;{]/.test(afterParen)) {
+        continue;
+      }
+    } else {
+      // 既存ロジック: 同一行の場合
+      const afterParen = line.substring(closeParenIndex + 1).trim();
+      if (!/^(?:throws\s+[\w,\s]+)?\s*[;{]/.test(afterParen)) {
+        continue;
+      }
     }
 
     const column = line.indexOf(methodName);
     methods.push({
       name: methodName,
-      line: lineIndex,
+      line: lineIndex,  // メソッド名がある行を記録
       column: column >= 0 ? column : 0,
     });
   }
@@ -181,8 +227,8 @@ function isReservedWord(word: string): boolean {
  * Javaファイルがマッパーインターフェースかどうかを判定
  */
 export function isMapperInterface(content: string): boolean {
-  // インターフェース宣言があるかチェック
-  return INTERFACE_PATTERN.test(content);
+  const sanitized = sanitizeJavaContent(content);
+  return INTERFACE_PATTERN.test(sanitized);
 }
 
 /**
@@ -209,10 +255,12 @@ export function parseJavaMapper(
   // メソッド一覧を抽出
   const methods = extractMethods(content);
 
-  // O(1)検索用のMapを生成
+  // O(1)検索用のMapを生成（オーバーロード時は最初の定義を優先）
   const methodMap = new Map<string, MethodLocation>();
   for (const method of methods) {
-    methodMap.set(method.name, method);
+    if (!methodMap.has(method.name)) {
+      methodMap.set(method.name, method);
+    }
   }
 
   return {

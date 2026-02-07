@@ -9,7 +9,7 @@ export interface StatementLocation {
   /** statement の id 属性値 */
   id: string;
   /** statement の種類 */
-  type: "select" | "insert" | "update" | "delete" | "resultMap";
+  type: "select" | "insert" | "update" | "delete" | "resultMap" | "sql";
   /** 行番号（0-based） */
   line: number;
   /** 列番号（0-based） */

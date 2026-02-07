@@ -143,6 +143,45 @@ public interface UserMapper {
       assert.strictEqual(methods[0].name, "updateUser");
     });
 
+    test("ブロックコメント内のメソッドシグネチャを無視する", () => {
+      const content = `package com.example.mapper;
+
+public interface UserMapper {
+    /* User fakeMethod(Long id); */
+    User findById(Long id);
+}`;
+      const methods = extractMethods(content);
+      assert.strictEqual(methods.length, 1);
+      assert.strictEqual(methods[0].name, "findById");
+    });
+
+    test("行コメント内のメソッドシグネチャを無視する", () => {
+      const content = `package com.example.mapper;
+
+public interface UserMapper {
+    // User fakeMethod(Long id);
+    User findById(Long id);
+}`;
+      const methods = extractMethods(content);
+      assert.strictEqual(methods.length, 1);
+      assert.strictEqual(methods[0].name, "findById");
+    });
+
+    test("複数行ブロックコメント内のメソッドシグネチャを無視する", () => {
+      const content = `package com.example.mapper;
+
+public interface UserMapper {
+    /*
+     * User fakeMethod1(Long id);
+     * List<User> fakeMethod2();
+     */
+    User findById(Long id);
+}`;
+      const methods = extractMethods(content);
+      assert.strictEqual(methods.length, 1);
+      assert.strictEqual(methods[0].name, "findById");
+    });
+
     test("@Paramとthrows句を含むメソッドを抽出", () => {
       const content = `package com.example.mapper;
 
@@ -152,6 +191,103 @@ public interface UserMapper {
       const methods = extractMethods(content);
       assert.strictEqual(methods.length, 1);
       assert.strictEqual(methods[0].name, "findById");
+    });
+
+    test("複数行メソッドシグネチャを抽出", () => {
+      const content = `package com.example.mapper;
+
+public interface UserMapper {
+    List<User> findByCondition(
+        @Param("name") String name,
+        @Param("age") Integer age
+    );
+}`;
+      const methods = extractMethods(content);
+      assert.strictEqual(methods.length, 1);
+      assert.strictEqual(methods[0].name, "findByCondition");
+      // メソッド名は3行目（0-based）にある
+      assert.strictEqual(methods[0].line, 3);
+    });
+
+    test("複数行メソッドシグネチャ + throws句", () => {
+      const content = `package com.example.mapper;
+
+public interface UserMapper {
+    User findByNameAndAge(
+        @Param("name") String name,
+        @Param("age") Integer age
+    ) throws DataAccessException;
+}`;
+      const methods = extractMethods(content);
+      assert.strictEqual(methods.length, 1);
+      assert.strictEqual(methods[0].name, "findByNameAndAge");
+    });
+
+    test("タブインデントの複数行メソッドシグネチャを抽出", () => {
+      const content = [
+        "package com.example.mapper;",
+        "",
+        "public interface UserMapper {",
+        "\tList<User> findByCondition(",
+        "\t\t\t@Param(\"name\") String name,",
+        "\t\t\t@Param(\"age\") Integer age",
+        "\t);",
+        "}",
+      ].join("\n");
+      const methods = extractMethods(content);
+      assert.strictEqual(methods.length, 1);
+      assert.strictEqual(methods[0].name, "findByCondition");
+      assert.strictEqual(methods[0].line, 3);
+    });
+
+    test("タブインデントの複数行メソッドシグネチャ + throws句", () => {
+      const content = [
+        "package com.example.mapper;",
+        "",
+        "public interface UserMapper {",
+        "\tUser findByNameAndAge(",
+        "\t\t\t@Param(\"name\") String name,",
+        "\t\t\t@Param(\"age\") Integer age",
+        "\t) throws DataAccessException;",
+        "}",
+      ].join("\n");
+      const methods = extractMethods(content);
+      assert.strictEqual(methods.length, 1);
+      assert.strictEqual(methods[0].name, "findByNameAndAge");
+    });
+
+    test("タブとスペース混在の複数行メソッドシグネチャを抽出", () => {
+      const content = [
+        "package com.example.mapper;",
+        "",
+        "public interface UserMapper {",
+        "\tMap<String, Object> findByCondition(",
+        "\t    @Param(\"name\") String name,",
+        "\t    @Param(\"status\") Integer status",
+        "\t);",
+        "\tList<User> findAll();",
+        "}",
+      ].join("\n");
+      const methods = extractMethods(content);
+      assert.strictEqual(methods.length, 2);
+      assert.strictEqual(methods[0].name, "findByCondition");
+      assert.strictEqual(methods[1].name, "findAll");
+    });
+
+    test("配列型戻り値を持つメソッドを抽出", () => {
+      const content = `package com.example.mapper;
+
+public interface UserMapper {
+    User[] findAll();
+    byte[] getAvatar(Long id);
+    int[] getIds();
+}`;
+      const methods = extractMethods(content);
+      assert.strictEqual(methods.length, 3);
+      assert.deepStrictEqual(
+        methods.map((m) => m.name),
+        ["findAll", "getAvatar", "getIds"]
+      );
     });
   });
 
@@ -165,6 +301,38 @@ public interface UserMapper {}`;
     test("クラスならfalse", () => {
       const content = `package com.example;
 public class UserMapperImpl {}`;
+      assert.strictEqual(isMapperInterface(content), false);
+    });
+
+    test("アノテーション付きインターフェースならtrue", () => {
+      const content = `package com.example;
+@Mapper
+public interface UserMapper {}`;
+      assert.strictEqual(isMapperInterface(content), true);
+    });
+
+    test("引数付きアノテーション付きインターフェースならtrue", () => {
+      const content = `package com.example;
+@Repository("name")
+public interface UserMapper {}`;
+      assert.strictEqual(isMapperInterface(content), true);
+    });
+
+    test("同一行のアノテーション付きインターフェースならtrue", () => {
+      const content = `package com.example;
+@Mapper public interface UserMapper {}`;
+      assert.strictEqual(isMapperInterface(content), true);
+    });
+
+    test("抽象クラスならtrue", () => {
+      const content = `package com.example;
+public abstract class BaseMapper {}`;
+      assert.strictEqual(isMapperInterface(content), true);
+    });
+
+    test("通常のクラスは引き続きfalse（回帰テスト）", () => {
+      const content = `package com.example;
+public class UserService {}`;
       assert.strictEqual(isMapperInterface(content), false);
     });
   });
@@ -205,6 +373,48 @@ public class UserMapperImpl {
 }`;
       const result = parseJavaMapper("file:///UserMapper.java", content);
       assert.strictEqual(result, null);
+    });
+
+    test("オーバーロードメソッドは最初の定義を保持する", () => {
+      const content = `package com.example.mapper;
+
+public interface UserMapper {
+    User findById(Long id);
+    User findById(Long id, boolean includeDeleted);
+}`;
+      const result = parseJavaMapper("file:///UserMapper.java", content);
+      assert.notStrictEqual(result, null);
+      // methodsには全メソッドが含まれる
+      assert.strictEqual(result!.methods.length, 2);
+      // methodMapは最初の定義を保持
+      const method = result!.methodMap.get("findById");
+      assert.notStrictEqual(method, undefined);
+      assert.strictEqual(method!.line, 3); // 最初の定義の行
+    });
+
+    test("アノテーション付きインターフェースをパース", () => {
+      const content = `package com.example.mapper;
+
+@Mapper
+public interface UserMapper {
+    User findById(Long id);
+}`;
+      const result = parseJavaMapper("file:///UserMapper.java", content);
+      assert.notStrictEqual(result, null);
+      assert.strictEqual(result?.interfaceName, "UserMapper");
+      assert.strictEqual(result?.methods.length, 1);
+    });
+
+    test("抽象クラスMapperをパース", () => {
+      const content = `package com.example.mapper;
+
+public abstract class BaseMapper {
+    User findById(Long id);
+}`;
+      const result = parseJavaMapper("file:///BaseMapper.java", content);
+      assert.notStrictEqual(result, null);
+      assert.strictEqual(result?.interfaceName, "BaseMapper");
+      assert.strictEqual(result?.methods.length, 1);
     });
   });
 });
