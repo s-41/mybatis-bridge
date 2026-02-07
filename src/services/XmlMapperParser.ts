@@ -4,6 +4,7 @@
  */
 
 import type { StatementLocation, XmlMapperInfo } from "../types";
+import { sanitizeXmlContent } from "../utils";
 
 /**
  * MyBatis XMLかどうかを判定するパターン
@@ -25,9 +26,10 @@ const STATEMENT_PATTERN =
  * XMLコンテンツがMyBatis XMLかどうかを判定
  */
 export function isMyBatisXml(content: string): boolean {
+  const sanitized = sanitizeXmlContent(content);
   return (
-    MYBATIS_DOCTYPE_PATTERN.test(content) ||
-    MAPPER_NAMESPACE_PATTERN.test(content)
+    MYBATIS_DOCTYPE_PATTERN.test(sanitized) ||
+    MAPPER_NAMESPACE_PATTERN.test(sanitized)
   );
 }
 
@@ -35,7 +37,8 @@ export function isMyBatisXml(content: string): boolean {
  * XMLコンテンツからnamespaceを抽出
  */
 export function extractNamespace(content: string): string | null {
-  const match = content.match(MAPPER_NAMESPACE_PATTERN);
+  const sanitized = sanitizeXmlContent(content);
+  const match = sanitized.match(MAPPER_NAMESPACE_PATTERN);
   return match ? match[1] : null;
 }
 
@@ -44,13 +47,14 @@ export function extractNamespace(content: string): string | null {
  * 複数行にまたがるタグ定義にも対応
  */
 export function extractStatements(content: string): StatementLocation[] {
+  const sanitized = sanitizeXmlContent(content);
   const statements: StatementLocation[] = [];
 
   // グローバル正規表現のlastIndexをリセット
   STATEMENT_PATTERN.lastIndex = 0;
 
   let match: RegExpExecArray | null;
-  while ((match = STATEMENT_PATTERN.exec(content)) !== null) {
+  while ((match = STATEMENT_PATTERN.exec(sanitized)) !== null) {
     // タイプを正規化（resultMapは大文字小文字を保持）
     const rawType = match[1].toLowerCase();
     const type = (
@@ -59,7 +63,7 @@ export function extractStatements(content: string): StatementLocation[] {
     const id = match[2];
 
     // マッチ位置から行番号を計算
-    const beforeMatch = content.substring(0, match.index);
+    const beforeMatch = sanitized.substring(0, match.index);
     const line = (beforeMatch.match(/\n/g) || []).length;
 
     // カラム計算（最後の改行からの距離）

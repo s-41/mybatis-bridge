@@ -143,6 +143,45 @@ public interface UserMapper {
       assert.strictEqual(methods[0].name, "updateUser");
     });
 
+    test("ブロックコメント内のメソッドシグネチャを無視する", () => {
+      const content = `package com.example.mapper;
+
+public interface UserMapper {
+    /* User fakeMethod(Long id); */
+    User findById(Long id);
+}`;
+      const methods = extractMethods(content);
+      assert.strictEqual(methods.length, 1);
+      assert.strictEqual(methods[0].name, "findById");
+    });
+
+    test("行コメント内のメソッドシグネチャを無視する", () => {
+      const content = `package com.example.mapper;
+
+public interface UserMapper {
+    // User fakeMethod(Long id);
+    User findById(Long id);
+}`;
+      const methods = extractMethods(content);
+      assert.strictEqual(methods.length, 1);
+      assert.strictEqual(methods[0].name, "findById");
+    });
+
+    test("複数行ブロックコメント内のメソッドシグネチャを無視する", () => {
+      const content = `package com.example.mapper;
+
+public interface UserMapper {
+    /*
+     * User fakeMethod1(Long id);
+     * List<User> fakeMethod2();
+     */
+    User findById(Long id);
+}`;
+      const methods = extractMethods(content);
+      assert.strictEqual(methods.length, 1);
+      assert.strictEqual(methods[0].name, "findById");
+    });
+
     test("@Paramとthrows句を含むメソッドを抽出", () => {
       const content = `package com.example.mapper;
 

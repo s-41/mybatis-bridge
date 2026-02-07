@@ -4,6 +4,7 @@
  */
 
 import type { MapperFieldInfo, MapperCallInfo } from "../types";
+import { sanitizeJavaContent } from "../utils";
 
 /**
  * import文のパターン
@@ -68,7 +69,8 @@ export function extractMapperFields(
   knownMapperFqns: Set<string>
 ): MapperFieldInfo[] {
   const fields: MapperFieldInfo[] = [];
-  const lines = content.split("\n");
+  const sanitized = sanitizeJavaContent(content);
+  const lines = sanitized.split("\n");
 
   // 行ごとにフィールド宣言をチェック
   for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
@@ -124,7 +126,8 @@ export function extractMapperCalls(
   }
 
   const calls: MapperCallInfo[] = [];
-  const lines = content.split("\n");
+  const sanitized = sanitizeJavaContent(content);
+  const lines = sanitized.split("\n");
 
   // 行ごとにメソッド呼び出しをチェック
   for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {

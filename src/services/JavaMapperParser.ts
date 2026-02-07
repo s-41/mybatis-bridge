@@ -4,6 +4,7 @@
  */
 
 import type { JavaMapperInfo, MethodLocation } from "../types";
+import { sanitizeJavaContent } from "../utils";
 
 /**
  * パッケージ宣言を抽出するパターン
@@ -91,7 +92,8 @@ const RESERVED_WORDS = new Set([
  * Javaコンテンツからパッケージ名を抽出
  */
 export function extractPackageName(content: string): string | null {
-  const match = content.match(PACKAGE_PATTERN);
+  const sanitized = sanitizeJavaContent(content);
+  const match = sanitized.match(PACKAGE_PATTERN);
   return match ? match[1] : null;
 }
 
@@ -99,7 +101,8 @@ export function extractPackageName(content: string): string | null {
  * Javaコンテンツからインターフェース名を抽出
  */
 export function extractInterfaceName(content: string): string | null {
-  const match = content.match(INTERFACE_PATTERN);
+  const sanitized = sanitizeJavaContent(content);
+  const match = sanitized.match(INTERFACE_PATTERN);
   return match ? match[1] : null;
 }
 
@@ -111,8 +114,9 @@ function extractPackageAndInterface(content: string): {
   packageName: string | null;
   interfaceName: string | null;
 } {
-  const packageMatch = content.match(PACKAGE_PATTERN);
-  const interfaceMatch = content.match(INTERFACE_PATTERN);
+  const sanitized = sanitizeJavaContent(content);
+  const packageMatch = sanitized.match(PACKAGE_PATTERN);
+  const interfaceMatch = sanitized.match(INTERFACE_PATTERN);
 
   return {
     packageName: packageMatch ? packageMatch[1] : null,
@@ -126,7 +130,8 @@ function extractPackageAndInterface(content: string): {
  */
 export function extractMethods(content: string): MethodLocation[] {
   const methods: MethodLocation[] = [];
-  const lines = content.split("\n");
+  const sanitized = sanitizeJavaContent(content);
+  const lines = sanitized.split("\n");
 
   // 各行を走査してメソッドを検出
   for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
@@ -181,8 +186,8 @@ function isReservedWord(word: string): boolean {
  * Javaファイルがマッパーインターフェースかどうかを判定
  */
 export function isMapperInterface(content: string): boolean {
-  // インターフェース宣言があるかチェック
-  return INTERFACE_PATTERN.test(content);
+  const sanitized = sanitizeJavaContent(content);
+  return INTERFACE_PATTERN.test(sanitized);
 }
 
 /**

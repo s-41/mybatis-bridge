@@ -131,6 +131,49 @@ suite("XmlMapperParser Test Suite", () => {
       );
     });
 
+    test("XMLコメント内のstatementパターンを無視する", () => {
+      const content = `<mapper namespace="com.example.mapper.UserMapper">
+  <!-- <select id="commentedOut" resultType="User">
+    SELECT * FROM users
+  </select> -->
+  <select id="findById" resultType="User">
+    SELECT * FROM users WHERE id = #{id}
+  </select>
+</mapper>`;
+      const statements = extractStatements(content);
+      assert.strictEqual(statements.length, 1);
+      assert.strictEqual(statements[0].id, "findById");
+    });
+
+    test("CDATAセクション内のXMLパターンを無視する", () => {
+      const content = `<mapper namespace="com.example.mapper.UserMapper">
+  <select id="findById" resultType="User">
+    <![CDATA[
+      <select id="fakeInCdata">
+      SELECT * FROM users WHERE age > 10 AND age < 20
+    ]]>
+  </select>
+</mapper>`;
+      const statements = extractStatements(content);
+      assert.strictEqual(statements.length, 1);
+      assert.strictEqual(statements[0].id, "findById");
+    });
+
+    test("複数のコメントが混在するケース", () => {
+      const content = `<mapper namespace="com.example.mapper.UserMapper">
+  <!-- <insert id="fakeInsert"> -->
+  <select id="findAll" resultType="User">SELECT * FROM users</select>
+  <!-- <delete id="fakeDelete"> -->
+  <insert id="insert">INSERT INTO users (name) VALUES (#{name})</insert>
+</mapper>`;
+      const statements = extractStatements(content);
+      assert.strictEqual(statements.length, 2);
+      assert.deepStrictEqual(
+        statements.map((s) => s.id),
+        ["findAll", "insert"]
+      );
+    });
+
     test("id属性が先頭以外の位置にある複数行タグを抽出", () => {
       const content = `<mapper namespace="com.example.mapper.UserMapper">
   <select
