@@ -22,6 +22,13 @@ const FIELD_PATTERN =
   /(?:@\w+(?:\([^)]*\))?\s*)*(?:private|protected|public)?\s*(?:final\s+)?(\w+)\s+(\w+)\s*[;=]/g;
 
 /**
+ * メソッドパラメータのパターン
+ * 例: public void execute(UserMapper userMapper, String name)
+ * アノテーション付きパラメータにも対応
+ */
+const PARAM_VAR_PATTERN = /(?:@\w+(?:\([^)]*\))?\s+)*(\w+)\s+(\w+)\s*[,)]/g;
+
+/**
  * メソッド呼び出しのパターン
  * 例: userMapper.findById(id)
  */
@@ -71,34 +78,43 @@ export function extractMapperFields(
   const fields: MapperFieldInfo[] = [];
   const sanitized = sanitizeJavaContent(content);
   const lines = sanitized.split("\n");
+  const seenFieldNames = new Set<string>();
 
-  // 行ごとにフィールド宣言をチェック
+  function tryAddField(typeName: string, fieldName: string, line: number) {
+    if (seenFieldNames.has(fieldName)) {
+      return;
+    }
+    const fqn = importMap.get(typeName);
+    if (!fqn) {
+      return;
+    }
+    if (!knownMapperFqns.has(fqn)) {
+      return;
+    }
+    seenFieldNames.add(fieldName);
+    fields.push({
+      fieldName,
+      mapperType: typeName,
+      mapperFqn: fqn,
+      line,
+    });
+  }
+
+  // 行ごとにフィールド宣言とメソッドパラメータをチェック
   for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
     const line = lines[lineIndex];
 
-    // パターンをリセット
+    // 既存: フィールド宣言パターン
     FIELD_PATTERN.lastIndex = 0;
-
     let match: RegExpExecArray | null;
     while ((match = FIELD_PATTERN.exec(line)) !== null) {
-      const typeName = match[1];
-      const fieldName = match[2];
+      tryAddField(match[1], match[2], lineIndex);
+    }
 
-      // import文からFQNを解決
-      const fqn = importMap.get(typeName);
-      if (!fqn) {
-        continue;
-      }
-
-      // 既知のMapperかどうか確認
-      if (knownMapperFqns.has(fqn)) {
-        fields.push({
-          fieldName,
-          mapperType: typeName,
-          mapperFqn: fqn,
-          line: lineIndex,
-        });
-      }
+    // 新規: メソッドパラメータパターン
+    PARAM_VAR_PATTERN.lastIndex = 0;
+    while ((match = PARAM_VAR_PATTERN.exec(line)) !== null) {
+      tryAddField(match[1], match[2], lineIndex);
     }
   }
 

@@ -43,6 +43,41 @@ public class UserService {
       assert.strictEqual(fields[0].mapperFqn, "com.example.mapper.UserMapper");
     });
 
+    test("メソッドパラメータ経由のMapper変数を検出する", () => {
+      const content = `import com.example.mapper.UserMapper;
+
+public class UserService {
+    public void execute(UserMapper userMapper) {
+        userMapper.findById(1L);
+    }
+}`;
+      const importMap = buildImportMap(content);
+      const knownFqns = new Set(["com.example.mapper.UserMapper"]);
+      const fields = extractMapperFields(content, importMap, knownFqns);
+      assert.strictEqual(fields.length, 1);
+      assert.strictEqual(fields[0].fieldName, "userMapper");
+      assert.strictEqual(fields[0].mapperType, "UserMapper");
+      assert.strictEqual(fields[0].mapperFqn, "com.example.mapper.UserMapper");
+    });
+
+    test("フィールド宣言とパラメータの重複排除", () => {
+      const content = `import com.example.mapper.UserMapper;
+
+public class UserService {
+    private UserMapper userMapper;
+
+    public void execute(UserMapper userMapper) {
+        userMapper.findById(1L);
+    }
+}`;
+      const importMap = buildImportMap(content);
+      const knownFqns = new Set(["com.example.mapper.UserMapper"]);
+      const fields = extractMapperFields(content, importMap, knownFqns);
+      // フィールド宣言が先に検出され、パラメータは重複排除される
+      assert.strictEqual(fields.length, 1);
+      assert.strictEqual(fields[0].fieldName, "userMapper");
+    });
+
     test("コメント内のフィールド宣言を無視する", () => {
       const content = `import com.example.mapper.UserMapper;
 
@@ -107,6 +142,24 @@ public class UserService {
       const calls = extractMapperCalls(content, fields);
       assert.strictEqual(calls.length, 1);
       assert.strictEqual(calls[0].methodName, "findAll");
+    });
+
+    test("パラメータ経由のMapper呼び出しを検出する", () => {
+      const content = `import com.example.mapper.UserMapper;
+
+public class UserService {
+    public void execute(UserMapper userMapper) {
+        userMapper.findById(1L);
+    }
+}`;
+      const importMap = buildImportMap(content);
+      const knownFqns = new Set(["com.example.mapper.UserMapper"]);
+      const fields = extractMapperFields(content, importMap, knownFqns);
+      const calls = extractMapperCalls(content, fields);
+      assert.strictEqual(calls.length, 1);
+      assert.strictEqual(calls[0].fieldName, "userMapper");
+      assert.strictEqual(calls[0].methodName, "findById");
+      assert.strictEqual(calls[0].mapperFqn, "com.example.mapper.UserMapper");
     });
 
     test("コメント内のメソッド呼び出しを無視する", () => {

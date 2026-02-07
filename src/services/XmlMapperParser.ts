@@ -20,7 +20,7 @@ const MAPPER_NAMESPACE_PATTERN = /<mapper\s+[^>]*namespace\s*=\s*["']([^"']+)["'
  * - `[^>]*?`で非貪欲マッチ（複数行タグに対応）
  */
 const STATEMENT_PATTERN =
-  /<(select|insert|update|delete|resultMap)\s+[^>]*?id\s*=\s*["']([^"']+)["']/gis;
+  /<(select|insert|update|delete|resultMap|sql)\s+[^>]*?id\s*=\s*["']([^"']+)["']/gis;
 
 /**
  * XMLコンテンツがMyBatis XMLかどうかを判定
@@ -55,7 +55,7 @@ export function extractStatements(content: string): StatementLocation[] {
 
   let match: RegExpExecArray | null;
   while ((match = STATEMENT_PATTERN.exec(sanitized)) !== null) {
-    // タイプを正規化（resultMapは大文字小文字を保持）
+    // タイプを正規化（resultMapは大文字小文字を保持、その他はlowercase）
     const rawType = match[1].toLowerCase();
     const type = (
       rawType === "resultmap" ? "resultMap" : rawType
