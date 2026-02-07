@@ -223,6 +223,57 @@ public interface UserMapper {
       assert.strictEqual(methods[0].name, "findByNameAndAge");
     });
 
+    test("タブインデントの複数行メソッドシグネチャを抽出", () => {
+      const content = [
+        "package com.example.mapper;",
+        "",
+        "public interface UserMapper {",
+        "\tList<User> findByCondition(",
+        "\t\t\t@Param(\"name\") String name,",
+        "\t\t\t@Param(\"age\") Integer age",
+        "\t);",
+        "}",
+      ].join("\n");
+      const methods = extractMethods(content);
+      assert.strictEqual(methods.length, 1);
+      assert.strictEqual(methods[0].name, "findByCondition");
+      assert.strictEqual(methods[0].line, 3);
+    });
+
+    test("タブインデントの複数行メソッドシグネチャ + throws句", () => {
+      const content = [
+        "package com.example.mapper;",
+        "",
+        "public interface UserMapper {",
+        "\tUser findByNameAndAge(",
+        "\t\t\t@Param(\"name\") String name,",
+        "\t\t\t@Param(\"age\") Integer age",
+        "\t) throws DataAccessException;",
+        "}",
+      ].join("\n");
+      const methods = extractMethods(content);
+      assert.strictEqual(methods.length, 1);
+      assert.strictEqual(methods[0].name, "findByNameAndAge");
+    });
+
+    test("タブとスペース混在の複数行メソッドシグネチャを抽出", () => {
+      const content = [
+        "package com.example.mapper;",
+        "",
+        "public interface UserMapper {",
+        "\tMap<String, Object> findByCondition(",
+        "\t    @Param(\"name\") String name,",
+        "\t    @Param(\"status\") Integer status",
+        "\t);",
+        "\tList<User> findAll();",
+        "}",
+      ].join("\n");
+      const methods = extractMethods(content);
+      assert.strictEqual(methods.length, 2);
+      assert.strictEqual(methods[0].name, "findByCondition");
+      assert.strictEqual(methods[1].name, "findAll");
+    });
+
     test("配列型戻り値を持つメソッドを抽出", () => {
       const content = `package com.example.mapper;
 
