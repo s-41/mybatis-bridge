@@ -8,6 +8,21 @@
 
 A VS Code extension that enables bidirectional navigation between Java Mapper interfaces and MyBatis XML files.
 
+### Demo
+
+<!-- TODO: GIFアニメーションを images/demo/ に配置後、パスを更新してください -->
+| Java → XML |
+|:-:|
+| ![Java to XML navigation](images/demo/java-to-xml.gif) |
+
+| XML → Java |
+|:-:|
+| ![XML to Java navigation](images/demo/xml-to-java.gif) |
+
+| Caller → XML |
+|:-:|
+| ![Caller to XML navigation](images/demo/codelens.gif) |
+
 ### Features
 
 - **Java → XML**: Jump from Mapper interface method names to corresponding XML statements (select/insert/update/delete/resultMap)
@@ -19,10 +34,10 @@ A VS Code extension that enables bidirectional navigation between Java Mapper in
 
 ### Usage
 
-On a Mapper interface method name or XML statement id, use:
+Navigate between Java Mapper interfaces and XML files using either:
 
-- `Ctrl+Click` (Mac: `Cmd+Click`)
-- `F12` (Go to Definition)
+- **Ctrl+Click** (Mac: `Cmd+Click`) or **F12** on a method name / XML statement id
+- **Click the CodeLens link** displayed above methods and statements (e.g. "Go to Mapper XML")
 
 ### Settings
 
@@ -45,7 +60,21 @@ MIT
 
 ## 日本語
 
-JavaのMapperインターフェースとMyBatis XMLファイル間の双方向ジャンプを実現するVS Code拡張機能。
+JavaのMapperインターフェースとMyBatis XMLファイル間の双方向ジャンプを実現するVS Code拡張機能です。
+
+### デモ
+
+| Java → XML |
+|:-:|
+| ![Java→XMLナビゲーション](images/demo/java-to-xml.gif) |
+
+| XML → Java |
+|:-:|
+| ![XML→Javaナビゲーション](images/demo/xml-to-java.gif) |
+
+| 呼び出し元 → XML |
+|:-:|
+| ![呼び出し元→XMLナビゲーション](images/demo/codelens.gif) |
 
 ### 機能
 
@@ -58,10 +87,10 @@ JavaのMapperインターフェースとMyBatis XMLファイル間の双方向�
 
 ### 使い方
 
-Mapperインターフェースのメソッド名、またはXMLのstatement id上で以下の操作を行う:
+以下のいずれかの方法で、JavaのMapperインターフェースとXMLファイル間をジャンプできます:
 
-- `Ctrl+Click`（Mac: `Cmd+Click`）
-- `F12`（Go to Definition）
+- メソッド名やXMLのstatement id上で **Ctrl+Click**（Mac: `Cmd+Click`）または **F12**
+- メソッドやstatementの上に表示される **CodeLensリンク**（例:「Go to Mapper XML」）をクリック
 
 ### 設定
 

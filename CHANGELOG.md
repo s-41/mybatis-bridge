@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-02-08
+
+### Added
+
+- コンテンツサニタイザーによるコメント・CDATA・文字列リテラル内の誤検出防止
+- XMLの`<sql>`要素の検出に対応
+- 複数行メソッドシグネチャの検出に対応（括弧の深さ追跡）
+- 配列型戻り値（`User[]`, `byte[]`等）の検出に対応
+- アノテーション付きinterface・抽象クラスMapperの検出に対応
+- メソッドパラメータ経由のMapper呼び出し検出に対応
+- 各パーサー・サニタイザーの単体テストを追加
+
+### Fixed
+
+- オーバーロードメソッドで最初の定義を優先するよう修正
+
 ## [0.1.1] - 2026-02-06
 
 ### Changed
@@ -46,7 +62,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `@Param`アノテーション付き引数を持つメソッドの検出対応
 - 複数行にまたがるXMLタグ定義の検出対応
 
-[Unreleased]: https://github.com/s-41/mybatis-bridge/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/s-41/mybatis-bridge/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/s-41/mybatis-bridge/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/s-41/mybatis-bridge/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/s-41/mybatis-bridge/compare/v0.0.1...v0.1.0
 [0.0.1]: https://github.com/s-41/mybatis-bridge/releases/tag/v0.0.1
