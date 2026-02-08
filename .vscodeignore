@@ -31,6 +31,9 @@ CLAUDE.md
 # Test configuration
 .vscode-test.mjs
 
+# Demo images (referenced via GitHub raw URL in README)
+images/demo/**
+
 # Other
 .DS_Store
 *.vsix
