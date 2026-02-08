@@ -10,18 +10,17 @@ A VS Code extension that enables bidirectional navigation between Java Mapper in
 
 ### Demo
 
-<!-- TODO: GIFアニメーションを images/demo/ に配置後、パスを更新してください -->
 | Java → XML |
 |:-:|
-| ![Java to XML navigation](images/demo/java-to-xml.gif) |
+| ![Java to XML navigation](https://raw.githubusercontent.com/s-41/mybatis-bridge/main/images/demo/java-to-xml.gif) |
 
 | XML → Java |
 |:-:|
-| ![XML to Java navigation](images/demo/xml-to-java.gif) |
+| ![XML to Java navigation](https://raw.githubusercontent.com/s-41/mybatis-bridge/main/images/demo/xml-to-java.gif) |
 
 | Caller → XML |
 |:-:|
-| ![Caller to XML navigation](images/demo/codelens.gif) |
+| ![Caller to XML navigation](https://raw.githubusercontent.com/s-41/mybatis-bridge/main/images/demo/codelens.gif) |
 
 ### Features
 
@@ -66,15 +65,15 @@ JavaのMapperインターフェースとMyBatis XMLファイル間の双方向�
 
 | Java → XML |
 |:-:|
-| ![Java→XMLナビゲーション](images/demo/java-to-xml.gif) |
+| ![Java→XMLナビゲーション](https://raw.githubusercontent.com/s-41/mybatis-bridge/main/images/demo/java-to-xml.gif) |
 
 | XML → Java |
 |:-:|
-| ![XML→Javaナビゲーション](images/demo/xml-to-java.gif) |
+| ![XML→Javaナビゲーション](https://raw.githubusercontent.com/s-41/mybatis-bridge/main/images/demo/xml-to-java.gif) |
 
 | 呼び出し元 → XML |
 |:-:|
-| ![呼び出し元→XMLナビゲーション](images/demo/codelens.gif) |
+| ![呼び出し元→XMLナビゲーション](https://raw.githubusercontent.com/s-41/mybatis-bridge/main/images/demo/codelens.gif) |
 
 ### 機能
 
