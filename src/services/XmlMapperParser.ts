@@ -230,6 +230,49 @@ export function extractTypeAttributes(content: string): TypeAttributeLocation[] 
 }
 
 /**
+ * resultMap属性を抽出する正規表現パターン
+ */
+const RESULTMAP_ATTRIBUTE_PATTERN = /\bresultMap\s*=\s*["']([^"']+)["']/g;
+
+/**
+ * 指定した行・列がresultMap属性値内かどうかを判定し、属性値を返す
+ * @param content XMLファイルの内容
+ * @param line カーソル行（0-based）
+ * @param column カーソル列（0-based）
+ * @returns resultMap属性値、またはnull
+ */
+export function getResultMapAttributeAtPosition(
+  content: string,
+  line: number,
+  column: number
+): string | null {
+  const lines = content.split("\n");
+  if (line < 0 || line >= lines.length) {
+    return null;
+  }
+
+  const lineText = lines[line];
+
+  const pattern = new RegExp(RESULTMAP_ATTRIBUTE_PATTERN.source, "g");
+  let match: RegExpExecArray | null;
+
+  while ((match = pattern.exec(lineText)) !== null) {
+    const value = match[1];
+
+    // 属性値の開始位置と終了位置を計算
+    const valueStartIndex = match.index + match[0].indexOf(value);
+    const valueEndIndex = valueStartIndex + value.length;
+
+    // カーソルが属性値内にあるかチェック
+    if (column >= valueStartIndex && column <= valueEndIndex) {
+      return value;
+    }
+  }
+
+  return null;
+}
+
+/**
  * 指定した行・列がid属性値内かどうかを判定し、id値を返す
  * @param content XMLファイルの内容
  * @param line カーソル行（0-based）

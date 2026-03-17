@@ -5,6 +5,7 @@ import {
   extractStatements,
   parseXmlMapper,
   getIdAtPosition,
+  getResultMapAttributeAtPosition,
   getTypeAttributeAtPosition,
   extractTypeAttributes,
 } from "../../services/XmlMapperParser";
@@ -318,6 +319,39 @@ suite("XmlMapperParser Test Suite", () => {
       assert.strictEqual(getTypeAttributeAtPosition(content, 0, 17), null);
       // タグ名の位置
       assert.strictEqual(getTypeAttributeAtPosition(content, 0, 5), null);
+    });
+  });
+
+  suite("getResultMapAttributeAtPosition", () => {
+    test("resultMap属性値上でidを返す", () => {
+      const content = `  <select id="findAll" resultMap="UserResultMap">`;
+      // "UserResultMap" は resultMap=" の後の位置
+      const idx = content.indexOf("UserResultMap");
+      assert.strictEqual(getResultMapAttributeAtPosition(content, 0, idx), "UserResultMap");
+      assert.strictEqual(getResultMapAttributeAtPosition(content, 0, idx + 5), "UserResultMap");
+      assert.strictEqual(getResultMapAttributeAtPosition(content, 0, idx + 12), "UserResultMap");
+    });
+
+    test("resultMap属性値外ではnullを返す", () => {
+      const content = `  <select id="findAll" resultMap="UserResultMap" resultType="User">`;
+      // id属性値の位置
+      const idIdx = content.indexOf("findAll");
+      assert.strictEqual(getResultMapAttributeAtPosition(content, 0, idIdx), null);
+      // resultType属性値の位置
+      const rtIdx = content.indexOf("User", content.indexOf("resultType"));
+      assert.strictEqual(getResultMapAttributeAtPosition(content, 0, rtIdx), null);
+    });
+
+    test("association/collectionのresultMap属性でもidを返す", () => {
+      const content = `    <association property="department" resultMap="DepartmentResultMap"/>`;
+      const idx = content.indexOf("DepartmentResultMap");
+      assert.strictEqual(getResultMapAttributeAtPosition(content, 0, idx), "DepartmentResultMap");
+    });
+
+    test("範囲外の行ではnullを返す", () => {
+      const content = `  <select id="findAll" resultMap="UserResultMap">`;
+      assert.strictEqual(getResultMapAttributeAtPosition(content, 1, 0), null);
+      assert.strictEqual(getResultMapAttributeAtPosition(content, -1, 0), null);
     });
   });
 
