@@ -71,40 +71,38 @@ export class XmlToJavaDefinitionProvider implements vscode.DefinitionProvider {
       }
     }
 
-    // カーソル位置がrefid属性値内かを判定
+    // refidまたはresultMap属性のジャンプ（同じXMLファイル内）
     const refid = getRefidAttributeAtPosition(
       content,
       position.line,
       position.character
     );
-    if (refid) {
-      const xmlMapper = indexService.getXmlMapperByUri(document.uri.toString());
-      if (xmlMapper) {
-        const statement = xmlMapper.statementMap.get(refid);
-        if (statement && statement.type === "sql") {
-          return new vscode.Location(
-            document.uri,
-            new vscode.Position(statement.line, statement.column)
-          );
-        }
-      }
-    }
-
-    // カーソル位置がresultMap属性値内かを判定
     const resultMapId = getResultMapAttributeAtPosition(
       content,
       position.line,
       position.character
     );
-    if (resultMapId) {
+
+    if (refid || resultMapId) {
       const xmlMapper = indexService.getXmlMapperByUri(document.uri.toString());
       if (xmlMapper) {
-        const statement = xmlMapper.statementMap.get(resultMapId);
-        if (statement && statement.type === "resultMap") {
-          return new vscode.Location(
-            document.uri,
-            new vscode.Position(statement.line, statement.column)
-          );
+        if (refid) {
+          const statement = xmlMapper.statementMap.get(refid);
+          if (statement && statement.type === "sql") {
+            return new vscode.Location(
+              document.uri,
+              new vscode.Position(statement.line, statement.column)
+            );
+          }
+        }
+        if (resultMapId) {
+          const statement = xmlMapper.statementMap.get(resultMapId);
+          if (statement && statement.type === "resultMap") {
+            return new vscode.Location(
+              document.uri,
+              new vscode.Position(statement.line, statement.column)
+            );
+          }
         }
       }
     }

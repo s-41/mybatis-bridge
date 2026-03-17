@@ -84,15 +84,19 @@ export class XmlToJavaCodeLensProvider implements vscode.CodeLensProvider {
       codeLenses.push(codeLens);
     }
 
-    // type系属性のCodeLensを生成
+    // type系属性のCodeLensを生成（並列でJavaクラスを検索）
     const typeAttributes = extractTypeAttributes(content);
+    const typeResults = await Promise.all(
+      typeAttributes.map((typeAttr) => indexService.findJavaClassByFqn(typeAttr.fqn))
+    );
 
-    for (const typeAttr of typeAttributes) {
-      const result = await indexService.findJavaClassByFqn(typeAttr.fqn);
+    for (let i = 0; i < typeAttributes.length; i++) {
+      const result = typeResults[i];
       if (!result) {
         continue;
       }
 
+      const typeAttr = typeAttributes[i];
       const range = new vscode.Range(
         typeAttr.line,
         typeAttr.column,
