@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-03-17
+
+### Added
+
+- resultMapのtype/resultType/parameterType属性のFQN値からJavaクラスへのジャンプ機能
+- CodeLensに「Go to Type Class」リンクを表示
+- resultMap属性値からresultMap定義へのジャンプ機能（association/collectionにも対応）
+- `<include refid="...">` から同一XML内の `<sql id="...">` へのジャンプ機能
+- ofType/javaType属性からJavaクラスへのジャンプに対応
+
+### Changed
+
+- 属性値検出ロジックを共通ヘルパーに統合しコードを簡素化
+- CodeLensのJavaクラス検索を並列実行に改善
+- デモGIFをパッケージから除外してvsixファイルサイズを削減
+
 ## [0.1.2] - 2026-02-08
 
 ### Added
@@ -62,7 +78,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `@Param`アノテーション付き引数を持つメソッドの検出対応
 - 複数行にまたがるXMLタグ定義の検出対応
 
-[Unreleased]: https://github.com/s-41/mybatis-bridge/compare/v0.1.2...HEAD
+[Unreleased]: https://github.com/s-41/mybatis-bridge/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/s-41/mybatis-bridge/compare/v0.1.2...v0.2.0
 [0.1.2]: https://github.com/s-41/mybatis-bridge/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/s-41/mybatis-bridge/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/s-41/mybatis-bridge/compare/v0.0.1...v0.1.0
