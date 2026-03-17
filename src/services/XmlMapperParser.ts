@@ -3,7 +3,7 @@
  * 正規表現ベースの軽量パースで、namespace と statement id を抽出する
  */
 
-import type { StatementLocation, XmlMapperInfo } from "../types";
+import type { StatementLocation, TypeAttributeLocation, XmlMapperInfo } from "../types";
 import { sanitizeXmlContent } from "../utils";
 
 /**
@@ -117,6 +117,116 @@ export function parseXmlMapper(
     statements,
     statementMap,
   };
+}
+
+/**
+ * type系属性を抽出する正規表現パターン
+ */
+const TYPE_ATTRIBUTE_PATTERN =
+  /\b(?:type|resultType|parameterType)\s*=\s*["']([^"']+)["']/g;
+
+/**
+ * FQN（ドットを含む完全修飾名）かどうかを判定
+ */
+function isFqn(value: string): boolean {
+  return value.includes(".");
+}
+
+/**
+ * 指定した行・列がtype/resultType/parameterType属性のFQN値内かどうかを判定
+ * @param content XMLファイルの内容
+ * @param line カーソル行（0-based）
+ * @param column カーソル列（0-based）
+ * @returns TypeAttributeLocation、またはnull
+ */
+export function getTypeAttributeAtPosition(
+  content: string,
+  line: number,
+  column: number
+): TypeAttributeLocation | null {
+  const lines = content.split("\n");
+  if (line < 0 || line >= lines.length) {
+    return null;
+  }
+
+  const lineText = lines[line];
+
+  const pattern = new RegExp(TYPE_ATTRIBUTE_PATTERN.source, "g");
+  let match: RegExpExecArray | null;
+
+  while ((match = pattern.exec(lineText)) !== null) {
+    const fqn = match[1];
+
+    // エイリアス（ドットなし）はスキップ
+    if (!isFqn(fqn)) {
+      continue;
+    }
+
+    // 属性値の開始位置と終了位置を計算
+    const valueStartIndex = match.index + match[0].indexOf(fqn);
+    const valueEndIndex = valueStartIndex + fqn.length;
+
+    // カーソルが属性値内にあるかチェック
+    if (column >= valueStartIndex && column <= valueEndIndex) {
+      // 属性名を抽出
+      const attrNameMatch = match[0].match(/^(\w+)/);
+      const attributeName = attrNameMatch ? attrNameMatch[1] : "type";
+
+      return {
+        attributeName,
+        fqn,
+        line,
+        column: valueStartIndex,
+      };
+    }
+  }
+
+  return null;
+}
+
+/**
+ * XMLコンテンツからtype系属性のFQN値と位置情報を一括抽出（CodeLens用）
+ * @param content XMLファイルの内容
+ * @returns TypeAttributeLocationの配列
+ */
+export function extractTypeAttributes(content: string): TypeAttributeLocation[] {
+  const sanitized = sanitizeXmlContent(content);
+  const results: TypeAttributeLocation[] = [];
+
+  const pattern = new RegExp(TYPE_ATTRIBUTE_PATTERN.source, "g");
+  let match: RegExpExecArray | null;
+
+  while ((match = pattern.exec(sanitized)) !== null) {
+    const fqn = match[1];
+
+    // エイリアス（ドットなし）はスキップ
+    if (!isFqn(fqn)) {
+      continue;
+    }
+
+    // マッチ位置から行番号を計算
+    const beforeMatch = sanitized.substring(0, match.index);
+    const line = (beforeMatch.match(/\n/g) || []).length;
+
+    // 属性値の開始位置を計算
+    const valueOffset = match[0].indexOf(fqn);
+    const lastNewline = beforeMatch.lastIndexOf("\n");
+    const lineStart = lastNewline === -1 ? 0 : lastNewline + 1;
+    const column = match.index - lineStart + valueOffset;
+
+    // 属性名を抽出
+    const attrNameMatch = match[0].match(/^(\w+)/);
+    const attributeName = attrNameMatch ? attrNameMatch[1] : "type";
+
+    results.push({
+      attributeName,
+      fqn,
+      line,
+      column,
+    });
+  }
+
+  return results;
 }
 
 /**

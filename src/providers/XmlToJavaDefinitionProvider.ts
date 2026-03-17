@@ -5,7 +5,7 @@
 
 import * as vscode from "vscode";
 import { MapperIndexService } from "../services/MapperIndexService";
-import { extractNamespace, getIdAtPosition } from "../services/XmlMapperParser";
+import { extractNamespace, getIdAtPosition, getTypeAttributeAtPosition } from "../services/XmlMapperParser";
 
 /**
  * XML → Java ジャンプのDefinitionProvider
@@ -35,26 +35,42 @@ export class XmlToJavaDefinitionProvider implements vscode.DefinitionProvider {
       position.line,
       position.character
     );
-    if (!statementId) {
-      return undefined;
+    if (statementId) {
+      // XMLファイルからnamespaceを取得
+      const namespace = extractNamespace(content);
+      if (!namespace) {
+        return undefined;
+      }
+
+      // Javaファイル内の該当メソッドを検索
+      const result = indexService.findMethod(namespace, statementId);
+      if (!result) {
+        return undefined;
+      }
+
+      // vscode.Locationを返却
+      return new vscode.Location(
+        vscode.Uri.parse(result.uri),
+        new vscode.Position(result.location.line, result.location.column)
+      );
     }
 
-    // XMLファイルからnamespaceを取得
-    const namespace = extractNamespace(content);
-    if (!namespace) {
-      return undefined;
-    }
-
-    // Javaファイル内の該当メソッドを検索
-    const result = indexService.findMethod(namespace, statementId);
-    if (!result) {
-      return undefined;
-    }
-
-    // vscode.Locationを返却
-    return new vscode.Location(
-      vscode.Uri.parse(result.uri),
-      new vscode.Position(result.location.line, result.location.column)
+    // カーソル位置がtype/resultType/parameterType属性のFQN値内かを判定
+    const typeAttr = getTypeAttributeAtPosition(
+      content,
+      position.line,
+      position.character
     );
+    if (typeAttr) {
+      const result = await indexService.findJavaClassByFqn(typeAttr.fqn);
+      if (result) {
+        return new vscode.Location(
+          result.uri,
+          new vscode.Position(result.line, result.column)
+        );
+      }
+    }
+
+    return undefined;
   }
 }

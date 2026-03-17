@@ -68,7 +68,8 @@ export function activate(context: vscode.ExtensionContext): void {
 
   context.subscriptions.push(
     vscode.commands.registerCommand("mybatis-bridge.goToMapperXml", goToLocation),
-    vscode.commands.registerCommand("mybatis-bridge.goToMapperInterface", goToLocation)
+    vscode.commands.registerCommand("mybatis-bridge.goToMapperInterface", goToLocation),
+    vscode.commands.registerCommand("mybatis-bridge.goToTypeClass", goToLocation)
   );
 }
 

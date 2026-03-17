@@ -5,6 +5,8 @@ import {
   extractStatements,
   parseXmlMapper,
   getIdAtPosition,
+  getTypeAttributeAtPosition,
+  extractTypeAttributes,
 } from "../../services/XmlMapperParser";
 
 suite("XmlMapperParser Test Suite", () => {
@@ -276,6 +278,102 @@ suite("XmlMapperParser Test Suite", () => {
       assert.strictEqual(getIdAtPosition(content, 0, 3), null);
       // "resultType" 属性の位置
       assert.strictEqual(getIdAtPosition(content, 0, 30), null);
+    });
+  });
+
+  suite("getTypeAttributeAtPosition", () => {
+    test("type属性のFQN値上でTypeAttributeLocationを返す", () => {
+      const content = `  <resultMap id="userMap" type="com.example.model.User">`;
+      const result = getTypeAttributeAtPosition(content, 0, 35);
+      assert.notStrictEqual(result, null);
+      assert.strictEqual(result?.fqn, "com.example.model.User");
+      assert.strictEqual(result?.attributeName, "type");
+    });
+
+    test("resultType属性のFQN値上でTypeAttributeLocationを返す", () => {
+      const content = `  <select id="findById" resultType="com.example.model.User">`;
+      const result = getTypeAttributeAtPosition(content, 0, 40);
+      assert.notStrictEqual(result, null);
+      assert.strictEqual(result?.fqn, "com.example.model.User");
+      assert.strictEqual(result?.attributeName, "resultType");
+    });
+
+    test("parameterType属性のFQN値上でTypeAttributeLocationを返す", () => {
+      const content = `  <insert id="insert" parameterType="com.example.model.User">`;
+      const result = getTypeAttributeAtPosition(content, 0, 40);
+      assert.notStrictEqual(result, null);
+      assert.strictEqual(result?.fqn, "com.example.model.User");
+      assert.strictEqual(result?.attributeName, "parameterType");
+    });
+
+    test("エイリアス（ドットなし）ではnullを返す", () => {
+      const content = `  <resultMap id="userMap" type="User">`;
+      const result = getTypeAttributeAtPosition(content, 0, 32);
+      assert.strictEqual(result, null);
+    });
+
+    test("属性値外ではnullを返す", () => {
+      const content = `  <resultMap id="userMap" type="com.example.model.User">`;
+      // id属性値の位置
+      assert.strictEqual(getTypeAttributeAtPosition(content, 0, 17), null);
+      // タグ名の位置
+      assert.strictEqual(getTypeAttributeAtPosition(content, 0, 5), null);
+    });
+  });
+
+  suite("extractTypeAttributes", () => {
+    test("resultMapのtype属性からFQNを抽出", () => {
+      const content = `<mapper namespace="com.example.mapper.UserMapper">
+  <resultMap id="userMap" type="com.example.model.User">
+  </resultMap>
+</mapper>`;
+      const results = extractTypeAttributes(content);
+      assert.strictEqual(results.length, 1);
+      assert.strictEqual(results[0].fqn, "com.example.model.User");
+      assert.strictEqual(results[0].attributeName, "type");
+      assert.strictEqual(results[0].line, 1);
+    });
+
+    test("複数のtype系属性を抽出", () => {
+      const content = `<mapper namespace="com.example.mapper.UserMapper">
+  <resultMap id="userMap" type="com.example.model.User">
+  </resultMap>
+  <select id="findById" resultType="com.example.model.User">
+    SELECT * FROM users WHERE id = #{id}
+  </select>
+  <insert id="insert" parameterType="com.example.model.User">
+    INSERT INTO users (name) VALUES (#{name})
+  </insert>
+</mapper>`;
+      const results = extractTypeAttributes(content);
+      assert.strictEqual(results.length, 3);
+      assert.strictEqual(results[0].attributeName, "type");
+      assert.strictEqual(results[1].attributeName, "resultType");
+      assert.strictEqual(results[2].attributeName, "parameterType");
+    });
+
+    test("エイリアス（ドットなし）をスキップ", () => {
+      const content = `<mapper namespace="com.example.mapper.UserMapper">
+  <select id="findById" resultType="User">
+    SELECT * FROM users
+  </select>
+  <resultMap id="userMap" type="com.example.model.User">
+  </resultMap>
+</mapper>`;
+      const results = extractTypeAttributes(content);
+      assert.strictEqual(results.length, 1);
+      assert.strictEqual(results[0].fqn, "com.example.model.User");
+    });
+
+    test("XMLコメント内のtype属性を無視", () => {
+      const content = `<mapper namespace="com.example.mapper.UserMapper">
+  <!-- <resultMap id="commented" type="com.example.model.Ignored"> -->
+  <resultMap id="userMap" type="com.example.model.User">
+  </resultMap>
+</mapper>`;
+      const results = extractTypeAttributes(content);
+      assert.strictEqual(results.length, 1);
+      assert.strictEqual(results[0].fqn, "com.example.model.User");
     });
   });
 });

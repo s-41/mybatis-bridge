@@ -359,6 +359,48 @@ export class MapperIndexService {
   }
 
   /**
+   * FQNからJavaクラスファイルを検索し、クラス宣言の位置を返す
+   * @param fqn 完全修飾名（例: com.example.model.User）
+   * @returns ファイルURIとPositionの組、見つからなければundefined
+   */
+  async findJavaClassByFqn(
+    fqn: string
+  ): Promise<{ uri: vscode.Uri; line: number; column: number } | undefined> {
+    // FQNをファイルパスパターンに変換
+    const pathPattern = `**/${fqn.replace(/\./g, "/")}.java`;
+
+    const files = await vscode.workspace.findFiles(pathPattern, "**/node_modules/**", 1);
+    if (files.length === 0) {
+      return undefined;
+    }
+
+    const fileUri = files[0];
+    const document = await vscode.workspace.openTextDocument(fileUri);
+    const content = document.getText();
+
+    // クラス名を取得（FQNの最後の部分）
+    const className = fqn.substring(fqn.lastIndexOf(".") + 1);
+
+    // class/interface/enum/record宣言を検索
+    const classPattern = new RegExp(
+      `\\b(?:class|interface|enum|record)\\s+${className}\\b`
+    );
+
+    const lines = content.split("\n");
+    for (let i = 0; i < lines.length; i++) {
+      const match = classPattern.exec(lines[i]);
+      if (match) {
+        // クラス名自体の位置を返す
+        const nameIndex = lines[i].indexOf(className, match.index);
+        return { uri: fileUri, line: i, column: nameIndex };
+      }
+    }
+
+    // 宣言行が見つからなければファイル先頭にフォールバック
+    return { uri: fileUri, line: 0, column: 0 };
+  }
+
+  /**
    * 既知のMapper FQNのセットを取得
    * @returns Mapper完全修飾名のセット
    */

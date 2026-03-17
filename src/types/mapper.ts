@@ -61,6 +61,20 @@ export interface JavaMapperInfo {
 }
 
 /**
+ * XMLファイル内のtype系属性（type, resultType, parameterType）の位置情報
+ */
+export interface TypeAttributeLocation {
+  /** 属性名（type, resultType, parameterType） */
+  attributeName: string;
+  /** 完全修飾名（例: com.example.model.User） */
+  fqn: string;
+  /** 行番号（0-based） */
+  line: number;
+  /** 列番号（0-based） */
+  column: number;
+}
+
+/**
  * インデックスの状態
  */
 export type IndexState = "uninitialized" | "initializing" | "ready";
