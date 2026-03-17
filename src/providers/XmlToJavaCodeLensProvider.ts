@@ -10,6 +10,7 @@ import {
   isMyBatisXml,
   extractNamespace,
   extractStatements,
+  extractTypeAttributes,
 } from "../services/XmlMapperParser";
 import { isCodeLensEnabled } from "../utils";
 
@@ -81,6 +82,38 @@ export class XmlToJavaCodeLensProvider implements vscode.CodeLensProvider {
       });
 
       codeLenses.push(codeLens);
+    }
+
+    // type系属性のCodeLensを生成（並列でJavaクラスを検索）
+    const typeAttributes = extractTypeAttributes(content);
+    const typeResults = await Promise.all(
+      typeAttributes.map((typeAttr) => indexService.findJavaClassByFqn(typeAttr.fqn))
+    );
+
+    for (let i = 0; i < typeAttributes.length; i++) {
+      const result = typeResults[i];
+      if (!result) {
+        continue;
+      }
+
+      const typeAttr = typeAttributes[i];
+      const range = new vscode.Range(
+        typeAttr.line,
+        typeAttr.column,
+        typeAttr.line,
+        typeAttr.column + typeAttr.fqn.length
+      );
+
+      const typeCodeLens = new vscode.CodeLens(range, {
+        title: vscode.l10n.t("Go to Type Class"),
+        command: "mybatis-bridge.goToTypeClass",
+        arguments: [
+          result.uri,
+          new vscode.Position(result.line, result.column),
+        ],
+      });
+
+      codeLenses.push(typeCodeLens);
     }
 
     return codeLenses;

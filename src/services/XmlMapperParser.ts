@@ -3,7 +3,7 @@
  * 正規表現ベースの軽量パースで、namespace と statement id を抽出する
  */
 
-import type { StatementLocation, XmlMapperInfo } from "../types";
+import type { StatementLocation, TypeAttributeLocation, XmlMapperInfo } from "../types";
 import { sanitizeXmlContent } from "../utils";
 
 /**
@@ -120,38 +120,204 @@ export function parseXmlMapper(
 }
 
 /**
- * 指定した行・列がid属性値内かどうかを判定し、id値を返す
+ * type系属性を抽出する正規表現パターン
+ */
+const TYPE_ATTRIBUTE_PATTERN =
+  /\b(?:type|resultType|parameterType|ofType|javaType)\s*=\s*["']([^"']+)["']/g;
+
+/**
+ * resultMap属性を抽出する正規表現パターン
+ */
+const RESULTMAP_ATTRIBUTE_PATTERN = /\bresultMap\s*=\s*["']([^"']+)["']/g;
+
+/**
+ * refid属性を抽出する正規表現パターン
+ */
+const REFID_ATTRIBUTE_PATTERN = /\brefid\s*=\s*["']([^"']+)["']/g;
+
+/**
+ * id属性を抽出する正規表現パターン（refidなどを除外するため\bで境界チェック）
+ */
+const ID_ATTRIBUTE_PATTERN = /\bid\s*=\s*["']([^"']+)["']/g;
+
+/**
+ * FQN（ドットを含む完全修飾名）かどうかを判定
+ */
+function isFqn(value: string): boolean {
+  return value.includes(".");
+}
+
+/**
+ * 指定行のテキストから、カーソル位置にある属性値を検索する共通ヘルパー
+ * @param lineText 対象行のテキスト
+ * @param column カーソル列（0-based）
+ * @param pattern グローバルフラグ付きの正規表現（キャプチャグループ1が属性値）
+ * @returns マッチした属性値と開始位置、またはnull
+ */
+function findAttributeValueAtColumn(
+  lineText: string,
+  column: number,
+  pattern: RegExp
+): { value: string; valueStartIndex: number } | null {
+  let match: RegExpExecArray | null;
+
+  while ((match = pattern.exec(lineText)) !== null) {
+    const value = match[1];
+    const valueStartIndex = match.index + match[0].indexOf(value);
+    const valueEndIndex = valueStartIndex + value.length;
+
+    if (column >= valueStartIndex && column <= valueEndIndex) {
+      return { value, valueStartIndex };
+    }
+  }
+
+  return null;
+}
+
+/**
+ * content.split("\n")を行い、指定行のテキストを取得する共通ヘルパー
+ */
+function getLineText(content: string, line: number): string | null {
+  const lines = content.split("\n");
+  if (line < 0 || line >= lines.length) {
+    return null;
+  }
+  return lines[line];
+}
+
+/**
+ * 指定した行・列がtype/resultType/parameterType属性のFQN値内かどうかを判定
  * @param content XMLファイルの内容
  * @param line カーソル行（0-based）
  * @param column カーソル列（0-based）
- * @returns id属性値、またはnull
+ * @returns TypeAttributeLocation、またはnull
+ */
+export function getTypeAttributeAtPosition(
+  content: string,
+  line: number,
+  column: number
+): TypeAttributeLocation | null {
+  const lineText = getLineText(content, line);
+  if (lineText === null) {
+    return null;
+  }
+
+  const pattern = new RegExp(TYPE_ATTRIBUTE_PATTERN.source, "g");
+  let match: RegExpExecArray | null;
+
+  while ((match = pattern.exec(lineText)) !== null) {
+    const fqn = match[1];
+
+    // エイリアス（ドットなし）はスキップ
+    if (!isFqn(fqn)) {
+      continue;
+    }
+
+    const valueStartIndex = match.index + match[0].indexOf(fqn);
+    const valueEndIndex = valueStartIndex + fqn.length;
+
+    if (column >= valueStartIndex && column <= valueEndIndex) {
+      const attrNameMatch = match[0].match(/^(\w+)/);
+      const attributeName = attrNameMatch ? attrNameMatch[1] : "type";
+
+      return {
+        attributeName,
+        fqn,
+        line,
+        column: valueStartIndex,
+      };
+    }
+  }
+
+  return null;
+}
+
+/**
+ * XMLコンテンツからtype系属性のFQN値と位置情報を一括抽出（CodeLens用）
+ * 全文を走査するため、getTypeAttributeAtPosition（単一行検索）とは行位置の計算方法が異なる
+ * @param content XMLファイルの内容
+ * @returns TypeAttributeLocationの配列
+ */
+export function extractTypeAttributes(content: string): TypeAttributeLocation[] {
+  const sanitized = sanitizeXmlContent(content);
+  const results: TypeAttributeLocation[] = [];
+
+  const pattern = new RegExp(TYPE_ATTRIBUTE_PATTERN.source, "g");
+  let match: RegExpExecArray | null;
+
+  while ((match = pattern.exec(sanitized)) !== null) {
+    const fqn = match[1];
+
+    if (!isFqn(fqn)) {
+      continue;
+    }
+
+    const beforeMatch = sanitized.substring(0, match.index);
+    const line = (beforeMatch.match(/\n/g) || []).length;
+
+    const valueOffset = match[0].indexOf(fqn);
+    const lastNewline = beforeMatch.lastIndexOf("\n");
+    const lineStart = lastNewline === -1 ? 0 : lastNewline + 1;
+    const column = match.index - lineStart + valueOffset;
+
+    const attrNameMatch = match[0].match(/^(\w+)/);
+    const attributeName = attrNameMatch ? attrNameMatch[1] : "type";
+
+    results.push({
+      attributeName,
+      fqn,
+      line,
+      column,
+    });
+  }
+
+  return results;
+}
+
+/**
+ * 指定した行・列がresultMap属性値内かどうかを判定し、属性値を返す
+ */
+export function getResultMapAttributeAtPosition(
+  content: string,
+  line: number,
+  column: number
+): string | null {
+  const lineText = getLineText(content, line);
+  if (lineText === null) {
+    return null;
+  }
+  const pattern = new RegExp(RESULTMAP_ATTRIBUTE_PATTERN.source, "g");
+  return findAttributeValueAtColumn(lineText, column, pattern)?.value ?? null;
+}
+
+/**
+ * 指定した行・列がrefid属性値内かどうかを判定し、属性値を返す
+ */
+export function getRefidAttributeAtPosition(
+  content: string,
+  line: number,
+  column: number
+): string | null {
+  const lineText = getLineText(content, line);
+  if (lineText === null) {
+    return null;
+  }
+  const pattern = new RegExp(REFID_ATTRIBUTE_PATTERN.source, "g");
+  return findAttributeValueAtColumn(lineText, column, pattern)?.value ?? null;
+}
+
+/**
+ * 指定した行・列がid属性値内かどうかを判定し、id値を返す
  */
 export function getIdAtPosition(
   content: string,
   line: number,
   column: number
 ): string | null {
-  const lines = content.split("\n");
-  if (line < 0 || line >= lines.length) {
+  const lineText = getLineText(content, line);
+  if (lineText === null) {
     return null;
   }
-
-  const lineText = lines[line];
-
-  // id="xxx" または id='xxx' パターンを検索
-  const idPattern = /id\s*=\s*["']([^"']+)["']/g;
-  let match: RegExpExecArray | null;
-
-  while ((match = idPattern.exec(lineText)) !== null) {
-    // id属性値の開始位置と終了位置を計算
-    const valueStartIndex = match.index + match[0].indexOf(match[1]);
-    const valueEndIndex = valueStartIndex + match[1].length;
-
-    // カーソルがid属性値内にあるかチェック
-    if (column >= valueStartIndex && column <= valueEndIndex) {
-      return match[1];
-    }
-  }
-
-  return null;
+  const pattern = new RegExp(ID_ATTRIBUTE_PATTERN.source, "g");
+  return findAttributeValueAtColumn(lineText, column, pattern)?.value ?? null;
 }
