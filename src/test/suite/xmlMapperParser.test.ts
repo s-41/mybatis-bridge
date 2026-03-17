@@ -5,6 +5,7 @@ import {
   extractStatements,
   parseXmlMapper,
   getIdAtPosition,
+  getRefidAttributeAtPosition,
   getResultMapAttributeAtPosition,
   getTypeAttributeAtPosition,
   extractTypeAttributes,
@@ -280,6 +281,13 @@ suite("XmlMapperParser Test Suite", () => {
       // "resultType" 属性の位置
       assert.strictEqual(getIdAtPosition(content, 0, 30), null);
     });
+
+    test("refid属性のid部分にマッチしない", () => {
+      const content = `    SELECT <include refid="baseColumns"/> FROM users`;
+      const idx = content.indexOf("baseColumns");
+      assert.strictEqual(getIdAtPosition(content, 0, idx), null);
+      assert.strictEqual(getIdAtPosition(content, 0, idx + 5), null);
+    });
   });
 
   suite("getTypeAttributeAtPosition", () => {
@@ -305,6 +313,24 @@ suite("XmlMapperParser Test Suite", () => {
       assert.notStrictEqual(result, null);
       assert.strictEqual(result?.fqn, "com.example.model.User");
       assert.strictEqual(result?.attributeName, "parameterType");
+    });
+
+    test("ofType属性のFQN値上でTypeAttributeLocationを返す", () => {
+      const content = `    <collection property="items" ofType="com.example.model.Item">`;
+      const idx = content.indexOf("com.example.model.Item");
+      const result = getTypeAttributeAtPosition(content, 0, idx);
+      assert.notStrictEqual(result, null);
+      assert.strictEqual(result?.fqn, "com.example.model.Item");
+      assert.strictEqual(result?.attributeName, "ofType");
+    });
+
+    test("javaType属性のFQN値上でTypeAttributeLocationを返す", () => {
+      const content = `    <association property="dept" javaType="com.example.model.Department">`;
+      const idx = content.indexOf("com.example.model.Department");
+      const result = getTypeAttributeAtPosition(content, 0, idx);
+      assert.notStrictEqual(result, null);
+      assert.strictEqual(result?.fqn, "com.example.model.Department");
+      assert.strictEqual(result?.attributeName, "javaType");
     });
 
     test("エイリアス（ドットなし）ではnullを返す", () => {
@@ -355,6 +381,36 @@ suite("XmlMapperParser Test Suite", () => {
     });
   });
 
+  suite("getRefidAttributeAtPosition", () => {
+    test("refid属性値上でidを返す", () => {
+      const content = `    <include refid="baseColumns"/>`;
+      const idx = content.indexOf("baseColumns");
+      assert.strictEqual(getRefidAttributeAtPosition(content, 0, idx), "baseColumns");
+      assert.strictEqual(getRefidAttributeAtPosition(content, 0, idx + 5), "baseColumns");
+      assert.strictEqual(getRefidAttributeAtPosition(content, 0, idx + 10), "baseColumns");
+    });
+
+    test("refid属性値外ではnullを返す", () => {
+      const content = `    <include refid="baseColumns"/>`;
+      // タグ名の位置
+      assert.strictEqual(getRefidAttributeAtPosition(content, 0, 5), null);
+      // refid属性名の位置
+      assert.strictEqual(getRefidAttributeAtPosition(content, 0, 12), null);
+    });
+
+    test("シングルクォートのrefid属性でもidを返す", () => {
+      const content = `    <include refid='whereClause'/>`;
+      const idx = content.indexOf("whereClause");
+      assert.strictEqual(getRefidAttributeAtPosition(content, 0, idx), "whereClause");
+    });
+
+    test("範囲外の行ではnullを返す", () => {
+      const content = `    <include refid="baseColumns"/>`;
+      assert.strictEqual(getRefidAttributeAtPosition(content, 1, 0), null);
+      assert.strictEqual(getRefidAttributeAtPosition(content, -1, 0), null);
+    });
+  });
+
   suite("extractTypeAttributes", () => {
     test("resultMapのtype属性からFQNを抽出", () => {
       const content = `<mapper namespace="com.example.mapper.UserMapper">
@@ -397,6 +453,33 @@ suite("XmlMapperParser Test Suite", () => {
       const results = extractTypeAttributes(content);
       assert.strictEqual(results.length, 1);
       assert.strictEqual(results[0].fqn, "com.example.model.User");
+    });
+
+    test("ofType属性のFQNを抽出", () => {
+      const content = `<mapper namespace="com.example.mapper.UserMapper">
+  <resultMap id="userMap" type="com.example.model.User">
+    <collection property="items" ofType="com.example.model.Item"/>
+  </resultMap>
+</mapper>`;
+      const results = extractTypeAttributes(content);
+      assert.strictEqual(results.length, 2);
+      assert.strictEqual(results[0].fqn, "com.example.model.User");
+      assert.strictEqual(results[0].attributeName, "type");
+      assert.strictEqual(results[1].fqn, "com.example.model.Item");
+      assert.strictEqual(results[1].attributeName, "ofType");
+    });
+
+    test("javaType属性のFQNを抽出", () => {
+      const content = `<mapper namespace="com.example.mapper.UserMapper">
+  <resultMap id="userMap" type="com.example.model.User">
+    <association property="dept" javaType="com.example.model.Department"/>
+  </resultMap>
+</mapper>`;
+      const results = extractTypeAttributes(content);
+      assert.strictEqual(results.length, 2);
+      assert.strictEqual(results[0].fqn, "com.example.model.User");
+      assert.strictEqual(results[1].fqn, "com.example.model.Department");
+      assert.strictEqual(results[1].attributeName, "javaType");
     });
 
     test("XMLコメント内のtype属性を無視", () => {

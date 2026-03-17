@@ -5,7 +5,7 @@
 
 import * as vscode from "vscode";
 import { MapperIndexService } from "../services/MapperIndexService";
-import { extractNamespace, getIdAtPosition, getResultMapAttributeAtPosition, getTypeAttributeAtPosition } from "../services/XmlMapperParser";
+import { extractNamespace, getIdAtPosition, getRefidAttributeAtPosition, getResultMapAttributeAtPosition, getTypeAttributeAtPosition } from "../services/XmlMapperParser";
 
 /**
  * XML → Java ジャンプのDefinitionProvider
@@ -68,6 +68,25 @@ export class XmlToJavaDefinitionProvider implements vscode.DefinitionProvider {
           result.uri,
           new vscode.Position(result.line, result.column)
         );
+      }
+    }
+
+    // カーソル位置がrefid属性値内かを判定
+    const refid = getRefidAttributeAtPosition(
+      content,
+      position.line,
+      position.character
+    );
+    if (refid) {
+      const xmlMapper = indexService.getXmlMapperByUri(document.uri.toString());
+      if (xmlMapper) {
+        const statement = xmlMapper.statementMap.get(refid);
+        if (statement && statement.type === "sql") {
+          return new vscode.Location(
+            document.uri,
+            new vscode.Position(statement.line, statement.column)
+          );
+        }
       }
     }
 

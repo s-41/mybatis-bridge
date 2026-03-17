@@ -123,7 +123,7 @@ export function parseXmlMapper(
  * type系属性を抽出する正規表現パターン
  */
 const TYPE_ATTRIBUTE_PATTERN =
-  /\b(?:type|resultType|parameterType)\s*=\s*["']([^"']+)["']/g;
+  /\b(?:type|resultType|parameterType|ofType|javaType)\s*=\s*["']([^"']+)["']/g;
 
 /**
  * FQN（ドットを含む完全修飾名）かどうかを判定
@@ -273,6 +273,49 @@ export function getResultMapAttributeAtPosition(
 }
 
 /**
+ * refid属性を抽出する正規表現パターン
+ */
+const REFID_ATTRIBUTE_PATTERN = /\brefid\s*=\s*["']([^"']+)["']/g;
+
+/**
+ * 指定した行・列がrefid属性値内かどうかを判定し、属性値を返す
+ * @param content XMLファイルの内容
+ * @param line カーソル行（0-based）
+ * @param column カーソル列（0-based）
+ * @returns refid属性値、またはnull
+ */
+export function getRefidAttributeAtPosition(
+  content: string,
+  line: number,
+  column: number
+): string | null {
+  const lines = content.split("\n");
+  if (line < 0 || line >= lines.length) {
+    return null;
+  }
+
+  const lineText = lines[line];
+
+  const pattern = new RegExp(REFID_ATTRIBUTE_PATTERN.source, "g");
+  let match: RegExpExecArray | null;
+
+  while ((match = pattern.exec(lineText)) !== null) {
+    const value = match[1];
+
+    // 属性値の開始位置と終了位置を計算
+    const valueStartIndex = match.index + match[0].indexOf(value);
+    const valueEndIndex = valueStartIndex + value.length;
+
+    // カーソルが属性値内にあるかチェック
+    if (column >= valueStartIndex && column <= valueEndIndex) {
+      return value;
+    }
+  }
+
+  return null;
+}
+
+/**
  * 指定した行・列がid属性値内かどうかを判定し、id値を返す
  * @param content XMLファイルの内容
  * @param line カーソル行（0-based）
@@ -291,8 +334,8 @@ export function getIdAtPosition(
 
   const lineText = lines[line];
 
-  // id="xxx" または id='xxx' パターンを検索
-  const idPattern = /id\s*=\s*["']([^"']+)["']/g;
+  // id="xxx" または id='xxx' パターンを検索（refidなどを除外するため\bで境界チェック）
+  const idPattern = /\bid\s*=\s*["']([^"']+)["']/g;
   let match: RegExpExecArray | null;
 
   while ((match = idPattern.exec(lineText)) !== null) {
